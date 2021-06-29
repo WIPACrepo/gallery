@@ -164,39 +164,40 @@ class DB:
                 sql = 'select g_orderBy as `sort`, g_orderDirection as `order` from g2_AlbumItem where g_id = %s'
                 cursor.execute(sql, (g_id,))
                 details.update(cursor.fetchone())
-
-                # get thumbnail
-                sql = 'select g_id from g2_ChildEntity where g_parentId = %s'
-                cursor.execute(sql, (g_id,))
-                children = [row['g_id'] for row in cursor.fetchall()]
-                if children:
-                    sql = 'select g_id,g_entityType from g2_Entity where g_id in ('
-                    sql += ','.join('%s' for _ in children)
-                    sql += ')'
-                    cursor.execute(sql, children)
-                    thumb_id = None
-                    deriv_id = None
-                    for row in cursor.fetchall():
-                        if row['g_entityType'] == 'ThumbnailImage':
-                            thumb_id = row['g_id']
-                            break
-                        elif row['g_entityType'] == 'GalleryDerivativeImage':
-                            deriv_id = row['g_id']
-                    if thumb_id:
-                        details['thumbnails'] = [self.build_path(thumb_id)]
-                        sql = 'select g_id from g2_Derivative where g_derivativeSourceId = %s'
-                        cursor.execute(sql, (thumb_id,))
-                        try:
-                            deriv_id = cursor.fetchone()['g_id']
-                        except Exception:
-                            pass
-                        else:
-                            details['thumbnails'].append(f'derivative/{str(deriv_id)[0]}/{str(deriv_id)[1]}/{deriv_id}.dat')
-                    elif deriv_id:
-                        details['thumbnails'] = [f'derivative/{str(deriv_id)[0]}/{str(deriv_id)[1]}/{deriv_id}.dat']
             else:
                 # is a file
                 details['multiformat'] = self.multi_format(g_id)
+
+            # get thumbnail
+            sql = 'select g_id from g2_ChildEntity where g_parentId = %s'
+            cursor.execute(sql, (g_id,))
+            children = [row['g_id'] for row in cursor.fetchall()]
+            if children:
+                sql = 'select g_id,g_entityType from g2_Entity where g_id in ('
+                sql += ','.join('%s' for _ in children)
+                sql += ')'
+                cursor.execute(sql, children)
+                thumb_id = None
+                deriv_id = None
+                for row in cursor.fetchall():
+                    if row['g_entityType'] == 'ThumbnailImage':
+                        thumb_id = row['g_id']
+                        break
+                    elif row['g_entityType'] == 'GalleryDerivativeImage':
+                        deriv_id = row['g_id']
+                if thumb_id:
+                    details['thumbnails'] = [self.build_path(thumb_id)]
+                    sql = 'select g_id from g2_Derivative where g_derivativeSourceId = %s'
+                    cursor.execute(sql, (thumb_id,))
+                    try:
+                        deriv_id = cursor.fetchone()['g_id']
+                    except Exception:
+                        pass
+                    else:
+                        details['thumbnails'].append(f'derivative/{str(deriv_id)[0]}/{str(deriv_id)[1]}/{deriv_id}.dat')
+                elif deriv_id:
+                    details['thumbnails'] = [f'derivative/{str(deriv_id)[0]}/{str(deriv_id)[1]}/{deriv_id}.dat']
+
 
         details['path'] = self.build_path(g_id)
         details['hidden'] = not self.is_visible(g_id)
@@ -210,6 +211,7 @@ class DB:
             return any(row['access'] for row in cursor.fetchall())
 
 def write_md(args, details):
+    suffix = ''
     if details['type'] == 'GalleryAlbumItem':
         path = Path(args.dest) / details['path'] / 'index.md'
     else:
@@ -243,8 +245,14 @@ def write_md(args, details):
                     sort = '-'+sort
                 print(f'Sort: {sort}', file=f)
 
-        if details['type'] == 'GalleryAlbumItem' and 'thumbnails' in details:
-            thumb_path = Path(args.dest) / details['path'] / 'thumbnails/thumb.jpg'
+        if 'thumbnails' in details and (details['type'] == 'GalleryAlbumItem'
+                                        or suffix in ('.gif','.mp4','.avi','.webm','.mov')):
+            if details['type'] == 'GalleryAlbumItem':
+                thumb_path = Path(args.dest) / details['path'] / 'thumbnails/thumb.jpg'
+            else:
+                thumb_path = (Path(args.dest) / details['path']).parent / 'thumbnails' / Path(details['path']).name
+                if suffix in ('.mp4','.avi','.webm','.mov'):
+                    thumb_path.with_name(thumb_path.name.replace(suffix, '.jpg'))
             thumb_path.parent.mkdir(parents=True, exist_ok=True)
             if not thumb_path.exists():
                 for p in details['thumbnails']:
@@ -259,7 +267,7 @@ def write_md(args, details):
                         shutil.copy2(path, thumb_path)
                         break
             if thumb_path.exists():
-                print(f'Thumbnail: thumbnails/thumb.jpg', file=f)
+                print(f'Thumbnail: thumbnails/{thumb_path.name}', file=f)
 
         print('', file=f)
         if details['description']:

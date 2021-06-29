@@ -215,4 +215,4 @@ var initPhotoSwipeFromDOM = function(gallerySelector) {
 };
 
 // execute above function
-initPhotoSwipeFromDOM('.gallery');
+initPhotoSwipeFromDOM('.gallery_pswp');

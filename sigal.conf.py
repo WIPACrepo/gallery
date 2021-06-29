@@ -165,7 +165,7 @@ ignore_files = []#['*6570569_IceCube_backdrop.jpg','*ChamberlainWallpaper_final.
 # video_converter = 'ffmpeg'
 
 # File extensions that should be treated as video files
-# video_extensions = ['.mov', '.avi', '.mp4', '.webm', '.ogv', '.3gp']
+video_extensions = ['.mov', '.avi', '.mp4', '.webm', '.ogv', '.3gp']
 
 # Video format
 # specify an alternative format, valid are 'webm' (default) and 'mp4'
@@ -188,7 +188,7 @@ video_format = 'mp4'
 # MP4 options
 # Options used to encode the mp4 video. You may want to read
 # https://trac.ffmpeg.org/wiki/Encode/H.264
-# mp4_options = ['-crf', '23' ]
+mp4_options = ['-preset', 'veryslow', '-crf', '23' ]
 
 # MP4 options for 2-pass encoding
 # Options used to encode the mp4 video on the second pass.
@@ -204,7 +204,7 @@ video_format = 'mp4'
 # If the desired video extension and filename are the same, the video will
 # not be converted. If a transcode to different quality is required,
 # set this to True to force convert it. False by default.
-# video_always_convert = False
+#video_always_convert = True
 
 # -------------
 # Miscellaneous
@@ -269,7 +269,7 @@ video_format = 'mp4'
 # Another option is to import the plugin and put the module in the list, but
 # this will break with the multiprocessing feature (the settings dict obtained
 # from this file must be serializable).
-# plugins = [
+plugins = [
 #     'sigal.plugins.adjust',
 #     'sigal.plugins.compress_assets',
 #     'sigal.plugins.copyright',
@@ -278,10 +278,11 @@ video_format = 'mp4'
 #     'sigal.plugins.feeds',
 #     'sigal.plugins.media_page',
 #     'sigal.plugins.nomedia',
+    'sigal.plugins.nonmedia_files',
 #     'sigal.plugins.upload_s3',
 #     'sigal.plugins.watermark',
 #     'sigal.plugins.zip_gallery',
-# ]
+]
 
 # Adjust the image after resizing it. A default value of 1.0 leaves the images
 # untouched.
@@ -303,6 +304,13 @@ video_format = 'mp4'
 #    'password': 'password',
 #    'ask_password': False
 # }
+
+# Settings for nonmedia_files plugin
+nonmedia_files_options = {
+#     'ext_as_thumb': True,
+#     'ignore_ext': [],
+    'thumb_font': 'FreeMono.ttf',
+}
 
 # Settings for upload to s3 plugin
 # upload_s3_options = {

@@ -184,6 +184,7 @@ strong {
 .menu-img,
 .gallery__img--secondary {
   flex: 0 1 12.5%;
+  max-width: 12.5%;
   margin-bottom: 1em;
 }
 .gallery__img--secondary.thumbnail.video .video-overlay {
@@ -251,18 +252,21 @@ footer span:not(:last-child):after {
   .menu-img,
   .gallery__img--secondary {
     flex-basis: 16.66%;
+    max-width: 16.66%;
   }
 }
 @media screen and (max-width: 1400px) {
   .menu-img,
   .gallery__img--secondary {
     flex-basis: 20%;
+    max-width: 20%;
   }
 }
 @media screen and (max-width: 1200px) {
   .menu-img,
   .gallery__img--secondary {
     flex-basis: 25%;
+    max-width: 25%;
   }
 }
 @media screen and (max-width: 990px) {
@@ -278,12 +282,14 @@ footer span:not(:last-child):after {
   .menu-img,
   .gallery__img--secondary {
     flex-basis: 33%;
+    max-width: 33%;
   }
 }
 @media screen and (max-width: 760px) {
   .menu-img,
   .gallery__img--secondary {
     flex-basis: 50%;
+    max-width: 50%;
   }
 }
 @media screen and (max-width: 540px) {
@@ -300,5 +306,6 @@ footer span:not(:last-child):after {
   .menu-img,
   .gallery__img--secondary {
     flex-basis: 100%;
+    max-width: 100%;
   }
 }
