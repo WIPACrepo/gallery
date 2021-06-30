@@ -15,7 +15,8 @@ var initPhotoSwipeFromDOM = function(gallerySelector) {
       figureEl,
       linkEl,
       size,
-      item;
+      item,
+      orig_src;
 
     for(var i = 0; i < numNodes; i++) {
 
@@ -40,6 +41,10 @@ var initPhotoSwipeFromDOM = function(gallerySelector) {
           w: parseInt(size[0], 10),
           h: parseInt(size[1], 10)
         };
+      }
+      orig_src = figureEl.getAttribute('data-orig');
+      if (orig_src !== null && orig_src != "") {
+        item.orig_src = orig_src;
       }
 
       if(figureEl.children.length > 1) {

@@ -64,8 +64,9 @@
       <div class="gallery gallery_pswp" itemscope itemtype="http://schema.org/ImageGallery">
       {% for media in images %}
         <div class="gallery__img--secondary thumbnail">
-          <figure itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
-            <a href="{{ media.big_url }}" itemprop="contentUrl" data-size="{{media.input_size.width}}x{{media.input_size.height}}">
+          <figure itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
+                  data-orig="{{ media.big_url }}">
+            <a href="{{ media.url }}" itemprop="contentUrl" data-size="{{media.input_size.width}}x{{media.input_size.height}}">
               <img src="{{ theme.url }}/echo/blank.gif"
                    data-echo="{{ media.thumbnail }}"
                    alt="{{ media.url }}" itemprop="thumbnail" title="{{ media.exif.datetime }}" />
@@ -83,8 +84,9 @@
       <div class="gallery gallery_pswp" itemscope itemtype="http://schema.org/ImageGallery">
       {% for media in videos %}
         <figure class="gallery__img--secondary thumbnail video"
-                itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
-          <a href="{{ media.big_url }}" itemprop="contentUrl" data-type="video"
+                itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
+                data-orig="{{ media.big_url }}">
+          <a href="{{ media.url }}" itemprop="contentUrl" data-type="video"
              data-video='<div class="video"><div class="video__container"><video controls><source src="{{ media.url }}" type="{{ media.mime }}" /></video></div></div>'>
           <div class="video-overlay" style="line-height:{{settings['thumb_size'][1]}}px">
             <span class="material-icons">play_circle_outline</span>
@@ -171,6 +173,6 @@
           </div>
       </div>
   </div>
-  <script src="{{ theme.url }}/app.js"></script>
+  <script src="{{ theme.url }}/app.min.js"></script>
 
 {% endblock %}
