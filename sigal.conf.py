@@ -133,7 +133,7 @@ orig_link = True
 
 # Use symbolic links that are relative to the source directory instead of
 # absolute paths
-# rel_link = False
+#rel_link = True
 
 # Attribute of Album objects which is used to sort medias (eg 'title'). To
 # sort on a metadata key, use 'meta.key'.

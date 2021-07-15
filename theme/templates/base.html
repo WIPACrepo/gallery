@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
 
-    <title>{{ album.title }}</title>
+    <title>{{ album.title }} - IceCube Gallery</title>
     <meta name="description" content="">
     <meta name="author" content="{{ album.author }}">
     <meta name="viewport" content="width=device-width">
@@ -17,8 +17,6 @@
     {% include 'analytics.html' %}
   </head>
   <body>
-    {% include 'decrypt.html' %}
-    {% include 'gtm.html' %}
     <div class="container">
       <h1><a href="{{ album.index_url }}">{{ index_title }}</a></h1>
 
@@ -31,7 +29,6 @@
 
       {% include 'footer.html' %}
       {% block extra_footer %}{% endblock %}
-  </div>
-  {% include 'piwik.html' %}
+    </div>
   </body>
 </html>

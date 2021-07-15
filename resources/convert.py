@@ -7,8 +7,9 @@ Take raw album files and DB info, and translate into new dir structure.
 import argparse
 import os
 from collections import Counter
-from pathlib import Path
 import logging
+from pathlib import Path
+from pprint import pprint
 import shutil
 from html import unescape
 
@@ -25,7 +26,7 @@ class DB:
     def get_root_album(self):
         return DB.ROOT_ALBUM
 
-    def get_children(self, g_id):
+    def get_children(self, g_id, order=True):
         with self.connection.cursor() as cursor:
             # get child ids
             sql = 'select g_id from g2_ChildEntity where g_parentId = %s'
@@ -35,42 +36,46 @@ class DB:
                 child_id = row['g_id']
                 #if not self.is_visible(child_id):
                 #    continue
+                if self.get_type(child_id) not in ('GalleryAlbumItem','GalleryLinkItem','GalleryPhotoItem',
+                                                   'GalleryMovieItem','GalleryAnimationItem','GalleryUnknownItem'):
+                    continue
                 children.append(child_id)
 
-            # get order of parent
-            sql = 'select * from g2_AlbumItem where g_id = %s'
-            cursor.execute(sql, (g_id,))
-            row = cursor.fetchone()
+            if order:
+                # get order of parent
+                sql = 'select * from g2_AlbumItem where g_id = %s'
+                cursor.execute(sql, (g_id,))
+                row = cursor.fetchone()
 
-            # now order children
-            if row['g_orderBy'] in ('NULL', '', None, 'RatingSortOrder'):
-                return children
-            elif row['g_orderBy'] == 'orderWeight':
-                sql = 'select g_itemId as id from g2_ItemAttributesMap where g_itemId in ('
-                sql += ','.join('%s' for _ in children)
-                sql += ') order by g_orderWeight'
-            elif row['g_orderBy'] == 'originationTimestamp':
-                sql = 'select g_id as id from g2_Item where g_id in ('
-                sql += ','.join('%s' for _ in children)
-                sql += ') order by g_originationTimestamp'
-            elif row['g_orderBy'] == 'creationTimestamp':
-                sql = 'select g_id as id from g2_Entity where g_id in ('
-                sql += ','.join('%s' for _ in children)
-                sql += ') order by g_creationTimestamp'
-            elif row['g_orderBy'] == 'albumsFirst|creationTimestamp':
-                sql = 'select g_id as id from g2_Entity where g_id in ('
-                sql += ','.join('%s' for _ in children)
-                sql += ') order by g_entityType,g_creationTimestamp'
-            elif row['g_orderBy'] == 'title':
-                sql = 'select g_id as id from g2_Item where g_id in ('
-                sql += ','.join('%s' for _ in children)
-                sql += ') order by g_title'
-            else:
-                raise Exception(f"unknown order by: {row['g_orderBy']}")
-            cursor.execute(sql, children)
-            children = [row['id'] for row in cursor.fetchall()]
-            if row['g_orderDirection'] == 'desc':
-                children.reverse()
+                # now order children
+                if row['g_orderBy'] in ('NULL', '', None, 'RatingSortOrder'):
+                    return children
+                elif row['g_orderBy'] == 'orderWeight':
+                    sql = 'select g_itemId as id from g2_ItemAttributesMap where g_itemId in ('
+                    sql += ','.join('%s' for _ in children)
+                    sql += ') order by g_orderWeight'
+                elif row['g_orderBy'] == 'originationTimestamp':
+                    sql = 'select g_id as id from g2_Item where g_id in ('
+                    sql += ','.join('%s' for _ in children)
+                    sql += ') order by g_originationTimestamp'
+                elif row['g_orderBy'] == 'creationTimestamp':
+                    sql = 'select g_id as id from g2_Entity where g_id in ('
+                    sql += ','.join('%s' for _ in children)
+                    sql += ') order by g_creationTimestamp'
+                elif row['g_orderBy'] == 'albumsFirst|creationTimestamp':
+                    sql = 'select g_id as id from g2_Entity where g_id in ('
+                    sql += ','.join('%s' for _ in children)
+                    sql += ') order by g_entityType,g_creationTimestamp'
+                elif row['g_orderBy'] == 'title':
+                    sql = 'select g_id as id from g2_Item where g_id in ('
+                    sql += ','.join('%s' for _ in children)
+                    sql += ') order by g_title'
+                else:
+                    raise Exception(f"unknown order by: {row['g_orderBy']}")
+                cursor.execute(sql, children)
+                children = [row['id'] for row in cursor.fetchall()]
+                if row['g_orderDirection'] == 'desc':
+                    children.reverse()
             return children
 
     def build_path(self, g_id):
@@ -78,6 +83,13 @@ class DB:
             return ''
         path = []
         with self.connection.cursor() as cursor:
+            link_id = True
+            while link_id:
+                sql = 'select g_linkId from g2_Entity where g_id = %s'
+                cursor.execute(sql, (g_id,))
+                link_id = cursor.fetchone()['g_linkId']
+                if link_id:
+                    g_id = link_id
             while True:
                 sql = 'select g_pathComponent from g2_FileSystemEntity where g_id = %s'
                 cursor.execute(sql, (g_id,))
@@ -136,6 +148,13 @@ class DB:
                     raise Exception(f'did not find path {p} in g_id {g_id}')
             return g_id
 
+    def get_type(self, g_id):
+        with self.connection.cursor() as cursor:
+            sql = 'select g_entityType as type from g2_Entity where g_id = %s'
+            cursor.execute(sql, (g_id,))
+            row = cursor.fetchone()
+            return row['type']
+
     def get_details(self, g_id):
         details = {'id': g_id}
         with self.connection.cursor() as cursor:
@@ -149,6 +168,18 @@ class DB:
             sql = 'select g_creationTimestamp as CreateDate, g_modificationTImestamp as ModDate, g_entityType as type from g2_Entity where g_id = %s'
             cursor.execute(sql, (g_id,))
             details.update(cursor.fetchone())
+
+            if details['type'] == 'GalleryLinkItem':
+                # is a link to an album
+                sql = 'select g_link from g2_LinkItem where g_id = %s'
+                cursor.execute(sql, (g_id,))
+                g_id = cursor.fetchone()['g_link']
+                details['link_id'] = g_id
+                details['Link'] = '/'+self.build_path(g_id)
+
+                sql = 'select g_creationTimestamp as CreateDate, g_modificationTImestamp as ModDate, g_entityType as type from g2_Entity where g_id = %s'
+                cursor.execute(sql, (g_id,))
+                details.update(cursor.fetchone())
 
             sql = 'select g_viewCount as Views, g_orderWeight as OrderWeight from g2_ItemAttributesMap where g_itemId = %s'
             cursor.execute(sql, (g_id,))
@@ -199,8 +230,9 @@ class DB:
                     details['thumbnails'] = [f'derivative/{str(deriv_id)[0]}/{str(deriv_id)[1]}/{deriv_id}.dat']
 
 
-        details['path'] = self.build_path(g_id)
-        details['hidden'] = not self.is_visible(g_id)
+        details['src_path'] = self.build_path(g_id)
+        details['path'] = self.build_path(details['id'])
+        details['hidden'] = not self.is_visible(details['id'])
 
         return details
 
@@ -211,6 +243,27 @@ class DB:
             return any(row['access'] for row in cursor.fetchall())
 
 def write_md(args, details):
+    src_path = Path(args.source) / details['src_path']
+    if not src_path.exists():
+        if details['src_path'].startswith('SPImages/amanda'):
+            details['src_path'] = details['src_path'].replace('SPImages/amanda','Archive/amanda')
+            details['path'] = details['path'].replace('SPImages/amanda','Archive/amanda')
+        elif details['path'].startswith('222 Frames'):
+            details['src_path'] = 'WIPAC/' + details['src_path']
+            details['path'] = 'WIPAC/' + details['path']
+        elif details['src_path'].startswith('GraphicRe/promo/archive'):
+            details['src_path'] = details['src_path'].replace('GraphicRe/promo/archive','GraphicRe/archive')
+            details['path'] = details['path'].replace('GraphicRe/promo/archive','GraphicRe/archive')
+        elif (Path(args.source) / 'Archive' / details['src_path']).exists():
+            details['src_path'] = 'Archive/' + details['src_path']
+            details['path'] = 'Archive/' + details['path']
+        elif (Path(args.source) / 'SPImages' / details['src_path']).exists():
+            details['src_path'] = 'SPImages/' + details['src_path']
+            details['path'] = 'SPImages/' + details['path']
+        else:
+            raise OSError(f'{src_path} does not exist')
+        src_path = Path(args.source) / details['src_path']
+
     suffix = ''
     if details['type'] == 'GalleryAlbumItem':
         path = Path(args.dest) / details['path'] / 'index.md'
@@ -220,7 +273,8 @@ def write_md(args, details):
         if details['multiformat']:
             path = path.with_name(path.name.replace('.', '_') + suffix)
         if not path.exists():
-            shutil.copy2(Path(args.source) / details['path'], path)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src_path, path)
         path = path.with_name(path.name.replace(suffix, '') + '.md')
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -295,43 +349,86 @@ def main():
 
     db = DB(connection)
 
-    #print(db.build_path(326064))
-    #print(db.get_details(326064))
-    #return
+    paths = set()
 
-    from pprint import pprint
+    ### try DB traversal first
+    def process_children(g_id):
+        details = db.get_details(g_id)
+        #pprint(details)
+        if details['hidden']:
+            print(f'{details["path"]} is hidden')
+            return
+        if Path(details['path']).name.startswith('__'):
+            print(f'{details["path"]} starts with __')
+            return
 
+        try:
+            write_md(args, details)
+        except Exception:
+            if details['path'].startswith('malkus/psl/Bander') or details['path'].startswith('SPImages/weekly/'):
+                print(f'{details["path"]} is missing from fs')
+                return
+            pprint(details)
+            raise
+
+        paths.add(details['path'])
+
+        for ch_id in db.get_children(g_id, order=False):
+            try:
+                process_children(ch_id)
+            except Exception:
+                print(f'Error processing gid {g_id} child {ch_id} - {details["path"]}')
+                raise
+
+    process_children(db.get_root_album())
+
+    ### try filesystem traversal second
     def process_path(path):
-        path = os.path.join(root, path)[len(args.source)+1:]
+        path = path[len(args.source)+1:]
+        if path in paths:
+            return True # already processed
+        if Path(path).name.startswith('__') and path not in ('Archive/koci/Koci_s Slides/No Date/_______I-F-2-2_Electro-Mech_Drill.jpg'):
+            print(f'{path} starts with __')
+            return False
         try:
             g_id = db.get_id_for_path(path)
         except Exception:
-            print(f'{path} is missing')
-            return
+            if (path.startswith('Forest_ icecube') or path.lower().endswith('.jpg')
+                or path.startswith('SPImages/ehwd') or path.startswith('Archive/amanda')
+                or path in {'logos/uwmadison/color-UWcrest-print.pdf'}
+                ):
+                print(f'{path} is missing from db')
+                return False
+            print(path)
+            raise
         details = db.get_details(g_id)
         if details['hidden']:
             print(f'{path} is hidden')
-            return
+            return False
         write_md(args, details)
+        return True
 
-    write_md(args, db.get_details(DB.ROOT_ALBUM))
     for root,dirs,files in os.walk(args.source):
-        for path in dirs: # these should be albums
-            process_path(path)
+        for path in list(dirs): # these should be albums
+            if not list((Path(root) / path).iterdir()):
+                print(f'{path} is empty, skipping')
+                dirs.remove(path)
+                continue
+            fullpath = os.path.join(root,path)
+            if (fullpath.endswith('SPImages/drilldeploy/drillinganddeployingteam/kxiong')
+                or fullpath.endswith('malkus/psl/Bander/031020/Thumbs_db')
+                ):
+                dirs.remove(path)
+                continue
+            if not process_path(fullpath):
+                dirs.remove(path)
         for path in files: # these should be images/videos
-            process_path(path)
-
-    return
-
-    g_id = db.get_id_for_path('222/Bootcamp/Bootcamp 2018/UWRiverFalls_bootcampparticipants.JPG')
-    print(g_id, db.get_details(g_id))
-
-    #albums = db.get_children(db.get_root_album())
-    albums = db.get_children(5421)
-    print(albums)
-    pprint([db.get_details(gid) for gid in albums])
-    print(len(albums))
-
+            fullpath = os.path.join(root, path)
+            if (fullpath.endswith('malkus/psl/Bander/031020/Thumbs_db') or
+                fullpath.endswith('malkus/psl/Bander/030912/Thumbs_db')
+                ):
+                continue
+            process_path(fullpath)
 
 
 if __name__ == '__main__':
