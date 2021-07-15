@@ -1,5 +1,7 @@
 #!/bin/bash
 set -e
 . env/bin/activate
-sigal build --debug albums
-python minify.py theme/static _build/static
+SRC=${SRC:-albums}
+BUILD=${BUILD:-_build}
+sigal build --debug $SRC $BUILD
+python minify.py theme/static $BUILD/static
