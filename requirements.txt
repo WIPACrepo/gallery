@@ -1,4 +1,4 @@
-git+git://github.com/saimn/sigal@main#egg=sigal
+git+git://github.com/dsschult/sigal@sqlite_cache#egg=sigal
 slimit
 pymysql
 elasticsearch>=7.8.0
