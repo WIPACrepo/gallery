@@ -86,14 +86,13 @@ def process_results(results):
                 doc['thumbnail'] = p.with_name('thumbnails') / p.with_suffix('.jpg').name
         doc['thumbnail'] = config['SITE'] + str(doc['thumbnail'])
         if doc['is_album']:
-            doc['url'] = config['SITE'] + doc['path']
+            doc['url'] = config['SITE'] + doc['path'] + '/'
         else:
-            doc['url'] = config['SITE'] + str(Path(doc['path']).parent)
+            doc['url'] = config['SITE'] + str(Path(doc['path']).parent) + '/'
             if 'pswp_hash' in doc:
                 hash = doc['pswp_hash']
             else:
                 hash = get_pswp_hash(doc['path'])
-                print('hash',hash)
             if hash:
                 doc['url'] += hash
             doc['orig'] = config['SITE'] + doc['path']
