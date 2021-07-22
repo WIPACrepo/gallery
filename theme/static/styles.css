@@ -93,6 +93,8 @@ h1 {
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
+  font-family: 'Aldrich';
+  font-variant-caps: small-caps;
 }
 
 h1 a, h1 a:visited {
