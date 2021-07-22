@@ -5,12 +5,15 @@
   <link rel="stylesheet" href="{{ theme.url }}/default-skin/default-skin.css">
 {% endblock extra_head %}
 
+{% block extra_body_class %}search{% endblock %}
+
 {% block content %}
 
   <form class="search-form" method="GET">
     <input class="search-bar" type="text" name="query" value="{{ query }}" />
+    <div class="search-limit-label">Limit:</div>
     <input class="search-limit" type="number" name="limit" value="{{ limit }}" />
-    <button class="search-button" type="submit">Search</button>
+    <button class="search-button" type="submit"><span class="material-icons">search</span>Search</button>
   </form>
 
   <h2>Search Results</h2>

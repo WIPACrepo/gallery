@@ -48,17 +48,56 @@ h2, h3, h4, h5, h6 {
   font-weight: normal;
 }
 
+header {
+  display: flex;
+  flex-wrap: wrap;
+  direction: ltr;
+  justify-content: space-between;
+  height: 6em;
+}
+header > * {
+  margin: auto 0;
+  flex: 0 1 28%;
+}
+header .icecube_logo {
+  padding: 0 1em;
+}
+header .icecube_logo .logo_full {
+  display: block;
+}
+header .icecube_logo .logo_crop {
+  display: none;
+}
+header .search-form {
+  margin: .5em 1em 1em;
+  direction: ltr;
+  justify-content: end;
+}
+header .search-form .search-bar {
+  width: 60%;
+  max-width: 15em;
+}
+header .search-form .search-button {
+  padding: 0;
+  border-radius: .5em;
+  border-width: 1px;
+  width: 3em;
+}
+body.search header .search-form {
+  display: none;
+}
+
 h1 {
   font-size: 2.5rem;
   line-height: 1;
-  margin: .8em;
   font-weight: 600;
   text-align: center;
+  white-space: nowrap;
 }
 
-h1 a {
+h1 a, h1 a:visited {
   text-decoration: none;
-  color: #282B30;
+  color: #3773a2;
 }
 
 strong {
@@ -269,13 +308,13 @@ footer span:not(:last-child):after {
     flex-basis: 25%;
     max-width: 25%;
   }
+  h1 {
+    font-size: 2.5rem;
+  }
 }
 @media screen and (max-width: 990px) {
   .content {
     margin: 1em 1.5em;
-  }
-  h1 {
-    font-size: 2rem;
   }
   .breadcrumb {
     font-size: 1.25rem;
@@ -284,6 +323,42 @@ footer span:not(:last-child):after {
   .gallery__img--secondary {
     flex-basis: 33%;
     max-width: 33%;
+  }
+  header {
+    height: 7em;
+  }
+  body.search header {
+    height: 5em;
+  }
+  header .icecube_logo .logo_full {
+    display: none;
+  }
+  header .icecube_logo .logo_crop {
+    display: block;
+  }
+  header .icecube_logo {
+    flex-basis: auto;
+    padding: 0 .5em;
+  }
+  header h1 {
+    font-size: 2rem;
+    text-align: left;
+    padding: .5em .2em .4em;
+  }
+  header .search {
+    flex-basis: 100%;
+  }
+  header, header .search-form {
+    justify-content: center;
+  }
+  header .search-form {
+    margin: .5em 1em;
+  }
+  header .search-form .search-bar {
+    max-width: 70%;
+  }
+  h2 {
+    font-size: 1.4rem;
   }
 }
 @media screen and (max-width: 760px) {
@@ -297,10 +372,6 @@ footer span:not(:last-child):after {
   .content {
     margin: 1em;
   }
-  h1 {
-    font-size: 1.5rem;
-    margin: .5em;
-  }
   .breadcrumb {
     font-size: 1rem;
   }
@@ -309,31 +380,47 @@ footer span:not(:last-child):after {
     flex-basis: 100%;
     max-width: 100%;
   }
+  body.search .search-form .search-bar {
+    flex-basis: 100%;
+    margin-right: 0;
+  }
 }
 
 .search-form {
-    display: flex;
-    height: 2em;
-    margin: 0 1em 2em;
+  display: flex;
+  margin: 0 .5em 2em;
+}
+body.search .search-form {
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .search-form .search-bar {
-    width: 75%;
-    margin-right: .5em;
+  flex: 1 1 20%;
+  margin-right: .5em;
+}
+.search-form .search-limit-label {
+  margin: auto .3em auto 0;
 }
 .search-form .search-limit {
-    width: 5em;
-    margin-right: .5em;
+  width: 3.2em;
+  margin-right: .5em;
+}
+.search-form .search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 .search-overview {
-    margin-bottom: 1em;
+  margin-bottom: 1em;
 }
 .search-result {
-    display: flex;
-    margin-bottom: 1em;
+  display: flex;
+  margin-bottom: 1em;
 }
 .search-result .details {
-    margin-left: 1em;
+  margin-left: 1em;
 }
 .search-result .details .label {
-    font-weight: 600;
+  font-weight: 600;
 }

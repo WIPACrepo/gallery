@@ -130,7 +130,7 @@ async def flask_search():
 
 
     ctx = {
-        'album': {'title': 'Search'},
+        'album': {'title': 'Search', 'description': 'Gallery search page', 'url': '/search', 'index_url': '/'},
         'index_title': 'IceCube Gallery',
         'settings': settings,
         'theme': {'name': os.path.basename(settings['theme']),

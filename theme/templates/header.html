@@ -1,0 +1,15 @@
+<header>
+  <div class="icecube_logo">
+    <a href="{{ album.index_url }}">
+      <img class="logo_full" src="{{ theme.url }}/icecube_logo.png" alt="IceCube Logo" style="height:60px;width:228px;max-width:228px" />
+      <img class="logo_crop" src="{{ theme.url }}/icecube_logo_crop.png" alt="IceCube Logo" style="height:60px;width:59px;max-width:59px" />
+    </a>
+  </div>
+  <h1><a href="{{ album.index_url }}">{{ index_title }}</a></h1>
+  <div class="search">
+    <form class="search-form" method="GET" action="/search">
+      <input class="search-bar" type="text" name="query" value="{{ query }}" />
+      <button class="search-button" type="submit"><span class="material-icons">search</span></button>
+    </form>
+  </div>
+</header>
