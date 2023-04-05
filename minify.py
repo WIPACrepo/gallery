@@ -5,7 +5,7 @@ import shutil
 import glob
 from io import open, StringIO
 
-from slimit import minify
+from jsmin import jsmin as minify
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
                 dest = dest.with_stem(dest.stem + '.min')
                 print(f'minifying {src} to {dest}')
                 with open(src) as f_src, open(dest, 'w') as f_dest:
-                    f_dest.write(minify(f_src.read(), mangle=True))
+                    f_dest.write(minify(f_src.read(), quote_chars="'\"`"))
 
 
 if __name__ == '__main__':

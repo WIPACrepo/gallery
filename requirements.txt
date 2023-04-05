@@ -1,5 +1,7 @@
-git+git://github.com/dsschult/sigal@sqlite_cache#egg=sigal
-slimit
+#git+git://github.com/dsschult/sigal@sqlite_cache#egg=sigal
+sigal
+#slimit
+jsmin
 pymysql
 elasticsearch>=7.8.0
 aiohttp

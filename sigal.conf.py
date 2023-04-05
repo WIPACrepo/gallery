@@ -165,7 +165,7 @@ ignore_files = []#['*6570569_IceCube_backdrop.jpg','*ChamberlainWallpaper_final.
 # video_converter = 'ffmpeg'
 
 # File extensions that should be treated as video files
-video_extensions = ['.mov', '.avi', '.mp4', '.webm', '.ogv', '.3gp']
+video_extensions = ['.avi', '.mp4', '.webm', '.ogv', '.3gp']
 
 # Video format
 # specify an alternative format, valid are 'webm' (default) and 'mp4'
@@ -274,7 +274,7 @@ plugins = [
 #     'sigal.plugins.compress_assets',
 #     'sigal.plugins.copyright',
 #     'sigal.plugins.encrypt',
-#     'sigal.plugins.extended_caching',
+     'sigal.plugins.extended_caching',
 #     'sigal.plugins.feeds',
 #     'sigal.plugins.media_page',
 #     'sigal.plugins.nomedia',

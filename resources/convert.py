@@ -254,6 +254,9 @@ def write_md(args, details):
         elif details['src_path'].startswith('GraphicRe/promo/archive'):
             details['src_path'] = details['src_path'].replace('GraphicRe/promo/archive','GraphicRe/archive')
             details['path'] = details['path'].replace('GraphicRe/promo/archive','GraphicRe/archive')
+        #elif details['path'].startswith('222/Archive'):
+        #    details['src_path'] = details['src_path'].replace('222/Archive','222')
+        #    details['path'] = details['path'].replace('222/Archive/', '222/')
         elif (Path(args.source) / 'Archive' / details['src_path']).exists():
             details['src_path'] = 'Archive/' + details['src_path']
             details['path'] = 'Archive/' + details['path']
@@ -270,7 +273,7 @@ def write_md(args, details):
     else:
         path = Path(args.dest) / details['path']
         suffix = ''.join(path.suffixes)
-        if details['multiformat']:
+        if 'multiformat' in details and details['multiformat']:
             path = path.with_name(path.name.replace('.', '_') + suffix)
         if not path.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -355,17 +358,20 @@ def main():
     def process_children(g_id):
         details = db.get_details(g_id)
         #pprint(details)
-        if details['hidden']:
+        if details['hidden'] and 'PersonalFiles' in details['path']:
             print(f'{details["path"]} is hidden')
             return
-        if Path(details['path']).name.startswith('__'):
+        name = Path(details['path']).name
+        if name.startswith('__') or name == '_AppleDouble':
             print(f'{details["path"]} starts with __')
             return
 
         try:
             write_md(args, details)
         except Exception:
-            if details['path'].startswith('malkus/psl/Bander') or details['path'].startswith('SPImages/weekly/'):
+            if (details['path'].startswith('malkus/psl/Bander')
+                or details['path'].startswith('SPImages/weekly/')
+                or details['path'] == 'drilldeploy/Season 6/String 81/IMG_6043.JPG'):
                 print(f'{details["path"]} is missing from fs')
                 return
             pprint(details)
@@ -384,17 +390,43 @@ def main():
 
     ### try filesystem traversal second
     def process_path(path):
+        orig_path = path
         path = path[len(args.source)+1:]
         if path in paths:
             return True # already processed
-        if Path(path).name.startswith('__') and path not in ('Archive/koci/Koci_s Slides/No Date/_______I-F-2-2_Electro-Mech_Drill.jpg'):
-            print(f'{path} starts with __')
+        name = Path(path).name
+        if ((name.startswith('__') and path not in ('Archive/koci/Koci_s Slides/No Date/_______I-F-2-2_Electro-Mech_Drill.jpg',))
+            or name == '_AppleDouble'):
+            print(f'{path} starts with _')
+            return False
+        if (not Path(orig_path).exists()) and Path(orig_path).is_symlink():
+            print(f'{path} is symlink to unknown fs')
             return False
         try:
             g_id = db.get_id_for_path(path)
         except Exception:
+            if path in ('SPImages/icl/icl_002/dc/cables/img_3661.jpg',
+                        'SPImages/weekly/2012/IMG_0273_001.jpg',
+                        'SPImages/weekly/2018/2018week35_raydome_001.jpg',
+                        'SPImages/weekly/2018/2018week35_explosion_001.jpg',
+                        'SPImages/weekly/2018/2018week35_soda_001.jpg',
+                        'SPImages/weekly/2018/2018week35_dragon_001.jpg',
+                        'SPImages/weekly/2018/2018week35_station_001.jpg',
+                        'logos/uwmadison/color-UWcrest-print.pdf',
+                        'GraphicRe/collabmaps/map_collaboration_031314_sm.jpg',
+                        'GraphicRe/collabmaps/map_icecube-pingu_powerpoint_EUzoom_061614.jpg',
+                        'GraphicRe/collabmaps/map_icecube-pingu_powerpoint_061614.jpg',
+                        'GraphicRe/collabmaps/map_collaboration_powerpoint_EUzoom_031314_sm.jpg',
+                        'Archive/malkus/Haugen 09-10/20091202 040.jpg',
+                        'Archive/koci/Koci_s Slides/No Date/_______I-F-2-2_Electro-Mech_Drill.jpg',
+                        ):
+                # copy over anyway
+                write_md(args, {'src_path': path, 'path': path, 'description': '', 'type': Path(path).suffix})
+                return True
+            if path in ('Archive/amanda',):
+                return True
             if (path.startswith('Forest_ icecube') or path.lower().endswith('.jpg')
-                or path.startswith('SPImages/ehwd') or path.startswith('Archive/amanda')
+                or path.startswith('SPImages/ehwd')
                 or path in {'logos/uwmadison/color-UWcrest-print.pdf'}
                 ):
                 print(f'{path} is missing from db')
@@ -402,7 +434,7 @@ def main():
             print(path)
             raise
         details = db.get_details(g_id)
-        if details['hidden']:
+        if details['hidden'] and 'PersonalFiles' in details['path']:
             print(f'{path} is hidden')
             return False
         write_md(args, details)
@@ -410,11 +442,12 @@ def main():
 
     for root,dirs,files in os.walk(args.source):
         for path in list(dirs): # these should be albums
+            fullpath = os.path.join(root,path)
+            partialpath = fullpath[len(args.source)+1:]
             if not list((Path(root) / path).iterdir()):
-                print(f'{path} is empty, skipping')
+                print(f'{partialpath} is empty, skipping')
                 dirs.remove(path)
                 continue
-            fullpath = os.path.join(root,path)
             if (fullpath.endswith('SPImages/drilldeploy/drillinganddeployingteam/kxiong')
                 or fullpath.endswith('malkus/psl/Bander/031020/Thumbs_db')
                 ):
@@ -424,8 +457,8 @@ def main():
                 dirs.remove(path)
         for path in files: # these should be images/videos
             fullpath = os.path.join(root, path)
-            if (fullpath.endswith('malkus/psl/Bander/031020/Thumbs_db') or
-                fullpath.endswith('malkus/psl/Bander/030912/Thumbs_db')
+            if (fullpath.endswith('/Thumbs_db') or
+                fullpath.endswith('/_DS_Store')
                 ):
                 continue
             process_path(fullpath)
