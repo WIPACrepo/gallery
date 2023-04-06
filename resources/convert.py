@@ -6,6 +6,7 @@ Take raw album files and DB info, and translate into new dir structure.
 
 import argparse
 import os
+from io import StringIO
 from collections import Counter
 import logging
 from pathlib import Path
@@ -254,9 +255,9 @@ def write_md(args, details):
         elif details['src_path'].startswith('GraphicRe/promo/archive'):
             details['src_path'] = details['src_path'].replace('GraphicRe/promo/archive','GraphicRe/archive')
             details['path'] = details['path'].replace('GraphicRe/promo/archive','GraphicRe/archive')
-        #elif details['path'].startswith('222/Archive'):
-        #    details['src_path'] = details['src_path'].replace('222/Archive','222')
-        #    details['path'] = details['path'].replace('222/Archive/', '222/')
+        elif details['path'].startswith('222') and (Path(args.source) / '222' / 'Archive' / src_path.relative_to(Path(args.source) / '222')).exists():
+            details['src_path'] = str(Path('222') / 'Archive' / src_path.relative_to(Path(args.source) / '222'))
+            details['path'] = details['path'].replace('222/', '222/Archive/')
         elif (Path(args.source) / 'Archive' / details['src_path']).exists():
             details['src_path'] = 'Archive/' + details['src_path']
             details['path'] = 'Archive/' + details['path']
@@ -280,56 +281,69 @@ def write_md(args, details):
             shutil.copy2(src_path, path)
         path = path.with_name(path.name.replace(suffix, '') + '.md')
 
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open('w') as f:
-        for k in details:
-            if not k[0].islower():
-                v = unescape(str(details[k]))
-                print(f'{k}: {v}', file=f)
+    assert path.name.endswith('.md')
 
-        if details['type'] == 'GalleryAlbumItem' and details['sort']:
-            sort = None
-            if details['sort'] == 'orderWeight':
-                sort = 'meta.orderweight'
-            elif 'Timestamp' in details['sort']:
-                sort = 'meta.moddate'
-            elif details['sort'] == 'title':
-                sort = 'meta.title'
-            else:
-                sort = 'meta.orderweight'
-            if sort:
-                if details['order'] == 'desc':
-                    sort = '-'+sort
-                print(f'Sort: {sort}', file=f)
+    existing_data = None
+    if path.exists():
+        with path.open() as f:
+            existing_data = f.read()
 
-        if 'thumbnails' in details and (details['type'] == 'GalleryAlbumItem'
-                                        or suffix in ('.gif','.mp4','.avi','.webm','.mov')):
-            if details['type'] == 'GalleryAlbumItem':
-                thumb_path = Path(args.dest) / details['path'] / 'thumbnails/thumb.jpg'
-            else:
-                thumb_path = (Path(args.dest) / details['path']).parent / 'thumbnails' / Path(details['path']).name
-                if suffix in ('.mp4','.avi','.webm','.mov'):
-                    thumb_path = thumb_path.with_name(thumb_path.name.replace(suffix, '.jpg'))
-            thumb_path.parent.mkdir(parents=True, exist_ok=True)
-            if not thumb_path.exists():
-                for p in details['thumbnails']:
-                    path = Path(args.source) / p
-                    if path.exists():
-                        print(f'found thumb {path} {thumb_path}')
-                        shutil.copy2(path, thumb_path)
-                        break
-                    path = Path(args.cache) / p
-                    if path.exists():
-                        print(f'found thumb {path} {thumb_path}')
-                        shutil.copy2(path, thumb_path)
-                        break
-            if thumb_path.exists():
-                print(f'Thumbnail: thumbnails/{thumb_path.name}', file=f)
+    f = StringIO()
+    for k in details:
+        if not k[0].islower():
+            v = unescape(str(details[k]))
+            print(f'{k}: {v}', file=f)
 
-        print('', file=f)
-        if details['description']:
-            print(f'{details["description"]}', file=f)
+    if details['type'] == 'GalleryAlbumItem' and details['sort']:
+        sort = None
+        if details['sort'] == 'orderWeight':
+            sort = 'meta.orderweight'
+        elif 'Timestamp' in details['sort']:
+            sort = 'meta.moddate'
+        elif details['sort'] == 'title':
+            sort = 'meta.title'
+        else:
+            sort = 'meta.orderweight'
+        if sort:
+            if details['order'] == 'desc':
+                sort = '-'+sort
+            print(f'Sort: {sort}', file=f)
 
+    if 'thumbnails' in details and (details['type'] == 'GalleryAlbumItem'
+                                    or suffix in ('.gif','.mp4','.avi','.webm','.mov')):
+        if details['type'] == 'GalleryAlbumItem':
+            thumb_path = Path(args.dest) / details['path'] / 'thumbnails/thumb.jpg'
+        else:
+            thumb_path = (Path(args.dest) / details['path']).parent / 'thumbnails' / Path(details['path']).name
+            if suffix in ('.mp4','.avi','.webm','.mov'):
+                thumb_path = thumb_path.with_name(thumb_path.name.replace(suffix, '.jpg'))
+        thumb_path.parent.mkdir(parents=True, exist_ok=True)
+        if not thumb_path.exists():
+            for p in details['thumbnails']:
+                path = Path(args.source) / p
+                if path.exists():
+                    print(f'found thumb {path} {thumb_path}')
+                    shutil.copy2(path, thumb_path)
+                    break
+                path = Path(args.cache) / p
+                if path.exists():
+                    print(f'found thumb {path} {thumb_path}')
+                    shutil.copy2(path, thumb_path)
+                    break
+        if thumb_path.exists():
+            print(f'Thumbnail: thumbnails/{thumb_path.name}', file=f)
+
+    print('', file=f)
+    if details['description']:
+        print(f'{details["description"]}', file=f)
+
+    new_data = f.getvalue()
+    if existing_data and existing_data != new_data:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open('w') as f:
+            f.write(new_data)
+    #else:
+    #    print(f'.md already exists at {path}')
 
 def main():
     config = {
@@ -449,7 +463,9 @@ def main():
                 dirs.remove(path)
                 continue
             if (fullpath.endswith('SPImages/drilldeploy/drillinganddeployingteam/kxiong')
-                or fullpath.endswith('malkus/psl/Bander/031020/Thumbs_db')
+                or fullpath.endswith('Thumbs_db')
+                or fullpath.endswith('.AppleDouble')
+                or fullpath.endswith('_DS_Store')
                 ):
                 dirs.remove(path)
                 continue
@@ -458,7 +474,9 @@ def main():
         for path in files: # these should be images/videos
             fullpath = os.path.join(root, path)
             if (fullpath.endswith('/Thumbs_db') or
-                fullpath.endswith('/_DS_Store')
+                fullpath.endswith('/_DS_Store') or
+                fullpath.endswith('SPImages/drilldeploy/Season 6/String 81/IMG_6045.JPG') or
+                fullpath.endswith('SPImages/drilldeploy/Season 6/String 81/IMG_6044.JPG')
                 ):
                 continue
             process_path(fullpath)
