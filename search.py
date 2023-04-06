@@ -18,7 +18,7 @@ from sigal.utils import url_from_path
 app = Flask(__name__, template_folder='theme/templates')
 
 config = {
-    'ES_ADDRESS': os.environ.get('ES_ADDRESS', 'localhost:9200'),
+    'ES_ADDRESS': os.environ.get('ES_ADDRESS', 'http://localhost:9200'),
     'ES_INDEX': os.environ.get('ES_INDEX', 'gallery'),
     'SITE': os.environ.get('SITE', 'http://localhost:8000'),
     'BUILD_DIR': os.environ.get('BUILD_DIR', '_build'),
@@ -28,7 +28,7 @@ settings = read_settings('sigal.conf.py')
 
 
 async def search(address, index_name, query, limit=100):
-    es = AsyncElasticsearch(address)
+    es = AsyncElasticsearch(host=address)
     try:
         ret = await es.search(index=index_name, body={
             'query': {
