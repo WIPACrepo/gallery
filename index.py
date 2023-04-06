@@ -130,11 +130,11 @@ async def main():
 
     index_name = f'{args.index_name}-{datetime.utcnow().strftime("%Y%m%dt%H%M%S")}'
 
-    es = AsyncElasticsearch(args.address)
-    ic = IndicesClient(es)
+    es = AsyncElasticsearch(hosts=args.address)
+    ic = IndicesClient(client=es)
     try:
         # create index
-        await ic.create(index_name, body={
+        await ic.create(index=index_name, body={
             'mappings': {
                 'properties': {
                     'path': {'type': 'text'},
@@ -151,21 +151,21 @@ async def main():
         })
 
         # add documents
-        async for ok, result in async_streaming_bulk(es, generate_files(index_name, args), chunk_size=5000, max_retries=2, yield_ok=False, request_timeout=60):
+        async for ok, result in async_streaming_bulk(client=es, actions=generate_files(index_name, args), chunk_size=5000, max_retries=2, yield_ok=False, request_timeout=60):
             action, result = result.popitem()
             if not ok:
                 print('failed to process', result)
 
         # swap alias
-        if await ic.exists_alias(args.index_name):
-            await ic.delete_alias('_all', args.index_name)
-        await ic.put_alias(index_name, args.index_name)
+        if await ic.exists_alias(name=args.index_name):
+            await ic.delete_alias(index='_all', name=args.index_name)
+        await ic.put_alias(index=index_name, name=args.index_name)
 
         # clean up old indexes
-        ret = await ic.get('_all')
+        ret = await ic.get(index='_all')
         for index in ret:
             if index != index_name:
-                await ic.delete(index)
+                await ic.delete(index=index)
     finally:
         await es.close()
 
