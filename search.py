@@ -28,7 +28,7 @@ settings = read_settings('sigal.conf.py')
 
 
 async def search(address, index_name, query, limit=100):
-    es = AsyncElasticsearch(host=address)
+    es = AsyncElasticsearch(hosts=address)
     try:
         ret = await es.search(index=index_name, body={
             'query': {
