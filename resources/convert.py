@@ -12,6 +12,7 @@ import logging
 from pathlib import Path
 from pprint import pprint
 import shutil
+import subprocess
 from html import unescape
 
 import pymysql.cursors
@@ -278,7 +279,10 @@ def write_md(args, details):
             path = path.with_name(path.name.replace('.', '_') + suffix)
         if not path.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src_path, path)
+            if path.suffix.lower() in ('.jpg', '.png'):
+                subprocess.check_call(['convert', src_path, '-auto-orient', path])
+            else:
+                shutil.copy2(src_path, path)
         path = path.with_name(path.name.replace(suffix, '') + '.md')
 
     assert path.name.endswith('.md')
@@ -320,15 +324,21 @@ def write_md(args, details):
         thumb_path.parent.mkdir(parents=True, exist_ok=True)
         if not thumb_path.exists():
             for p in details['thumbnails']:
-                path = Path(args.source) / p
-                if path.exists():
-                    print(f'found thumb {path} {thumb_path}')
-                    shutil.copy2(path, thumb_path)
+                thumb_path_try = Path(args.source) / p
+                if thumb_path_try.exists() and thumb_path_try.stat().st_size > 0:
+                    print(f'found thumb {thumb_path_try} {thumb_path}')
+                    if thumb_path_try.suffix.lower() in ('.jpg', '.png'):
+                        subprocess.check_call(['convert', thumb_path_try, '-auto-orient', thumb_path])
+                    else:
+                        shutil.copy2(thumb_path_try, thumb_path)
                     break
-                path = Path(args.cache) / p
-                if path.exists():
-                    print(f'found thumb {path} {thumb_path}')
-                    shutil.copy2(path, thumb_path)
+                thumb_path_try = Path(args.cache) / p
+                if thumb_path_try.exists() and thumb_path_try.stat().st_size > 0:
+                    print(f'found thumb {thumb_path_try} {thumb_path}')
+                    if thumb_path_try.suffix.lower() in ('.jpg', '.png'):
+                        subprocess.check_call(['convert', thumb_path_try, '-auto-orient', thumb_path])
+                    else:
+                        shutil.copy2(thumb_path_try, thumb_path)
                     break
         if thumb_path.exists():
             print(f'Thumbnail: thumbnails/{thumb_path.name}', file=f)
@@ -375,6 +385,25 @@ def main():
         if details['hidden'] and 'PersonalFiles' in details['path']:
             print(f'{details["path"]} is hidden')
             return
+        if ('Thumbs_db' in details['path'] or '.AppleDouble' in details['path'] or '_DS_Store' in details['path'] or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6053.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6052.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6051.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6050.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6049.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6048.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6047.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6046.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6045.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6044.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6043.JPG') or
+            details['path'].endswith('drilldeploy/Season 6/String 81/IMG_6042.JPG') or
+            details['path'].endswith('rpearson/Video/MMSDTrip.mov') or
+            details['path'].endswith('PersonalFiles/csburreson/generator_side__1_.jpg') or
+            details['path'].endswith('PersonalFiles/jcherwinka/SouthPole56/P2076842.JPG')
+            ):
+            print(f'{details["path"]} is excluded')
+            return
         name = Path(details['path']).name
         if name.startswith('__') or name == '_AppleDouble':
             print(f'{details["path"]} starts with __')
@@ -409,12 +438,18 @@ def main():
         if path in paths:
             return True # already processed
         name = Path(path).name
+        if 'Thumbs_db' in path or '.AppleDouble' in path or '_DS_Store' in path:
+            print(f'{path} is excluded')
+            return False
         if ((name.startswith('__') and path not in ('Archive/koci/Koci_s Slides/No Date/_______I-F-2-2_Electro-Mech_Drill.jpg',))
             or name == '_AppleDouble'):
             print(f'{path} starts with _')
             return False
         if (not Path(orig_path).exists()) and Path(orig_path).is_symlink():
             print(f'{path} is symlink to unknown fs')
+            return False
+        if os.path.getsize(orig_path) == 0:
+            print(f'{path} is 0 bytes')
             return False
         try:
             g_id = db.get_id_for_path(path)
@@ -481,6 +516,13 @@ def main():
                 continue
             process_path(fullpath)
 
+    # clean up empty dirs
+    for root,dirs,files in os.walk(args.dest):
+        for path in list(dirs):
+            fullpath = os.path.join(root, path)
+            if os.listdir(fullpath) == ['index.md']:
+                print('cleaning up empty dir', fullpath)
+                shutil.rmtree(fullpath)
 
 if __name__ == '__main__':
     main()
