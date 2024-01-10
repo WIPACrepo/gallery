@@ -1,4 +1,4 @@
-git+git://github.com/dsschult/sigal@cache_input_size#egg=sigal
+git+https://github.com/dsschult/sigal.git@cache_input_size#egg=sigal
 #sigal
 #slimit
 jsmin
