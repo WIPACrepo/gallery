@@ -1,5 +1,5 @@
-#git+git://github.com/dsschult/sigal@sqlite_cache#egg=sigal
-sigal
+git+git://github.com/dsschult/sigal@cache_input_size#egg=sigal
+#sigal
 #slimit
 jsmin
 pymysql
@@ -7,3 +7,4 @@ elasticsearch>=7.8.0
 aiohttp
 flask[async]
 beautifulsoup4
+#wipac-rest-tools
