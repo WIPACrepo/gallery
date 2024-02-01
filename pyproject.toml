@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm[toml]>=3.4"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wipac-gallery"
+description = "WIPAC media gallery"
+readme = "README.md"
+authors = [{name = "WIPAC Developers", email = "developers@icecube.wisc.edu"}]
+keywords = ["gallery", "static", "generator", "image", "video"]
+license = {text = "MIT License"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Multimedia :: Graphics :: Viewers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "aiohttp",
+    "beautifulsoup4",
+    "elasticsearch",
+    "jsmin",
+    "pymysql",
+    "sigal",
+    "wipac-dev-tools",
+    "wipac-rest-tools",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+tests = ["pytest", "pytest-async"]
+
+[project.urls]
+repository = "https://github.com/WIPACrepo/gallery"
+
+[tool.setuptools]
+include-package-data = true
+license-files = ["LICENSE"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gallery*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+gallery = [
+    "src/gallery/themes/**",
+]
+
+[tool.setuptools_scm]
+write_to = "src/gallery/version.py"
+
+[tool.ruff]
+exclude = ["env", "*tests", "bin" , "_build*", "docs", "resources", "albums"]
+target-version = "py39"
+
+[tool.ruff.lint]
+ignore = ["E203", "E226", "E228", "E231", "E501"]

@@ -1,22 +1,22 @@
 <!doctype html>
-<html lang="{{ settings.html_language }}">
+<html lang="{{ settings['html_language'] }}">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
 
     <title>{{ album.title }} - {{ index_title }}</title>
-    <meta name="description" content="{{ album.description }}">
-    <meta name="author" content="{{ album.author }}">
+    <meta name="description" content="{{ album['description'] }}">
+    <meta name="author" content="{{ album['author'] }}">
     <meta name="viewport" content="width=device-width">
-    <meta property="og:title" content="{{ album.title }}"/>
+    <meta property="og:title" content="{{ album['title'] }}"/>
     <meta property="og:type" content="website"/>
-    <meta property="og:url" content="{{ album.url }}"/>
+    <meta property="og:url" content="{{ album['url'] }}"/>
     <meta property="og:site_name" content="{{ index_title }}"/>
-    <meta property="og:description" content="{{ album.description }}"/>
-    <meta property="og:image" content="{{ album.thumbnail }}"/>
-    <link rel="stylesheet" href="{{ theme.url }}/styles.css">
+    <meta property="og:description" content="{{ album['description'] }}"/>
+    <meta property="og:image" content="{{ album['thumbnail'] }}"/>
+    <link rel="stylesheet" href="{{ theme['url'] }}/styles.css">
     {% if user_css %}
-    <link rel="stylesheet" href="{{ theme.url }}/{{ user_css }}">
+    <link rel="stylesheet" href="{{ theme['url'] }}/{{ user_css }}">
     {% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

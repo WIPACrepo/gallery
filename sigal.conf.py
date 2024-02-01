@@ -22,7 +22,7 @@ source = 'pictures'
 # Theme :
 # - colorbox (default), galleria, photoswipe, or the path to a custom theme
 # directory
-theme = 'theme'
+theme = 'src/gallery/data/theme'
 
 # Theme for galleria (https://galleriajs.github.io/themes/)
 # galleria_theme = 'classic'
