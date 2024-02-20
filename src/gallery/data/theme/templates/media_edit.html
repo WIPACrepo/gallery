@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <style>
+  #media_meta {
+    margin: 1em .5em 2em;
+    display: flex;
+    flex-direction: column;
+  }
+  #media_meta>div {
+    padding: 0 .25em;
+    min-height: 2em;
+  }
+  #media_meta textarea {
+    width: 100%;
+    min-height: 4em;
+  }
+  .media {
+    margin: .5em;
+  }
+  .media.link {
+    margin-left: 1em;
+  }
+  .delete-holder {
+    display: flex;
+    justify-content: space-between;
+  }
+  .delete button {
+    color: #ac0000;
+    font-weight: 500;
+    padding: .2em .4em;
+  }
+  </style>
+{% endblock extra_head %}
+
+{% block content %}
+{% if album['breadcrumb_edit'] %}
+  <div class="breadcrumb">
+    <ul>
+      <li><a href="{{ album['index_url'] }}"><span class="material-icons">home</span></a></li> »
+      {% for i, (url, title) in enumerate(album['breadcrumb_edit']) %}
+        {% if i > 0 %} » {% endif %}<li><a href="{{ url }}">{{ title }}</a></li>
+      {% endfor -%}
+    </ul>
+  </div>
+{% endif %}
+
+  <form id="delete" autocomplete="off" method="POST" onsubmit="return confirm('Do you really want to delete this?');">
+    {% module xsrf_form_html() %}
+    <input type="hidden" name="delete" value="delete" />
+    <div class="delete-holder">
+      <h2>Media Metadata</h2>
+      <div class="delete">
+        <button type="submit">Delete</button>
+      </div>
+    </div>
+  </form>
+  <form id="media" autocomplete="off" method="POST">
+    {% module xsrf_form_html() %}
+    <div id="media_meta">
+      <div>
+        <label for="title">Title:</label> <input type="text" name="title" value="{{ media['title'] }}" />
+      </div>
+      <div>
+        <label for="summary">Short Summary:</label> <input type="text" name="summary" value="{{ media['summary'] }}" />
+      </div>
+      <div>
+        <label for="description">Detailed Description (html allowed):</label><br><textarea type="text" name="description">{{ media['description'] }}</textarea>
+      </div>
+      <div>
+        <button type="submit">Update</button>
+      </div>
+    </div>
+
+    <h2>Thumbnail</h2>
+    <div class="media thumbnail">
+      <img src="{{ media['thumbnail'] }}"
+           alt="{{ media['title'] }}" />
+    </div>
+
+    <h2>Original</h2>
+    {% if media['type'] == 'image' %}
+    <div class="media full">
+      <a href="{{ media['src'] }}" target="_blank">
+        <img src="{{ media['src'] }}"
+           alt="{{ media['title'] }}" />
+      </a>
+    </div>
+    {% else %}
+    <div class="media link">
+      <a href="{{ media['src'] }}" target="_blank">link<span class="marker ui-icon ui-icon-extlink"></span></a>
+    </div>
+    {% endif %}
+  </form>
+{% endblock %}
+
+{% block extra_footer %}
+<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<script>
+$(function(){
+    
+});
+</script>
+{% endblock %}

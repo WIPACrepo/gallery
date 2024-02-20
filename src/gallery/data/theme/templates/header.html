@@ -8,7 +8,7 @@
   <h1><a href="{{ album['index_url'] }}">{{ index_title }}</a></h1>
   <div class="search">
     <form class="search-form" method="GET" action="/search">
-      <input class="search-bar" type="text" name="query" value="{{ query }}" />
+      <input class="search-bar" type="text" name="query" value="{% if search %}{{ search['query'] }}{% endif %}" />
       <button class="search-button" type="submit"><span class="material-icons">search</span></button>
     </form>
   </div>

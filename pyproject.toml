@@ -25,6 +25,7 @@ dependencies = [
     "beautifulsoup4",
     "elasticsearch",
     "jsmin",
+    "natsort",
     "pymysql",
     "sigal",
     "wipac-dev-tools",

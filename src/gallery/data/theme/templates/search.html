@@ -29,24 +29,24 @@
     {% for ret in results %}
     <div class="search-result">
       <div class="thumbnail">
-        <a href="{{ ret.url }}">
-          <img src="{{ theme.url }}/echo/blank.gif" data-echo="{{ ret.thumbnail }}" />
+        <a href="{{ ret['url'] }}">
+          <img src="{{ theme['url'] }}/echo/blank.gif" data-echo="{{ ret['thumbnail'] }}" />
         </a>
       </div>
       <div class="details">
-        <div><span class="label">Type: </span><span class="type">{{ ret.type }}</span></div>
-        <div><span class="label">Title: </span><span class="title">{{ ret.title }}</span></div>
-        {% if ret.summary %}
-        <div><span class="label">Summary: </span><span class="summary">{{ ret.summary }}</span></div>
+        <div><span class="label">Type: </span><span class="type">{{ ret['type'] }}</span></div>
+        <div><span class="label">Title: </span><span class="title">{{ ret['title'] }}</span></div>
+        {% if ret['summary'] %}
+        <div><span class="label">Summary: </span><span class="summary">{{ ret['summary'] }}</span></div>
         {% endif %}
-        {% if ret.keywords %}
-        <div><span class="label">Keywords: </span><span class="keywords">{{ ret.keywords }}</span></div>
+        {% if ret['keywords'] %}
+        <div><span class="label">Keywords: </span><span class="keywords">{{ ret['keywords'] }}</span></div>
         {% endif %}
-        {% if ret.date %}
-        <div><span class="label">Create Date: </span><span class="date">{{ ret.date }}</span></div>
+        {% if ret.get('date') %}
+        <div><span class="label">Create Date: </span><span class="date">{{ ret['date'] }}</span></div>
         {% endif %}
-        {% if ret.orig %}
-        <div><span class="label">Raw url: </span><a href="{{ ret.orig }}"><span class="orig">{{ ret.orig }}</span></a></div>
+        {% if ret.get('orig') %}
+        <div><span class="label">Raw url: </span><a href="{{ ret['orig'] }}"><span class="orig">{{ ret['orig'] }}</span></a></div>
         {% endif %}
       </div>
     </div>

@@ -1,8 +1,130 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
+  <style>
+  _.sortable figure { border: 1px solid #ccc; margin: .5em; }
+  #album_meta {
+    margin: 1em .5em 2em;
+    display: flex;
+    flex-direction: column;
+  }
+  #album_meta>div {
+    padding: 0 .25em;
+    min-height: 2em;
+  }
+  #album_meta textarea {
+    width: 100%;
+    min-height: 4em;
+  }
+  #upload_section {
+    margin: 1em 0 2em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  #upload_section>div {
+    display: flex;
+    flex-direction: column;
+    min-width: 20em;
+    padding: 0 1em 1em;
+  }
+  .dragdrop {
+    flex: 3 1 0;
+  }
+  .subalbum {
+    flex: 1 1 1;
+  }
+  #upload_section .submit {
+    margin-top: .5em;
+  }
+  .dz-error-mark {
+    filter: brightness(10%) invert(11%) sepia(99%) saturate(4777%) hue-rotate(358deg) brightness(96%) contrast(115%);
+  }
+  .dz-remove {
+    display:inline-block !important;
+    width:1.2em;
+    height:1.2em;
+
+    position:absolute;
+    top:-10px;
+    right:-10px;
+    z-index:1000;
+
+    font-size:1.2em !important;
+    line-height:1em;
+
+    text-align:center;
+    font-weight:bold;
+    border:1px solid gray !important;
+    border-radius:1.2em;
+    color:gray;
+    background-color:white;
+    opacity:.9;
+  }
+  .dz-remove:hover {
+    text-decoration:none !important;
+    border: 1px solid black !important;
+    opacity:1;
+  }
+  .dropzone .dz-preview:not(.dz-processing) .dz-progress {
+    display: none
+  }
+  </style>
+{% endblock extra_head %}
+
+{% block content %}
+{% if album['breadcrumb_edit'] %}
+  <div class="breadcrumb">
+    <ul>
+      <li><a href="{{ album['index_url'] }}"><span class="material-icons">home</span></a></li> »
+      {% for i, (url, title) in enumerate(album['breadcrumb_edit']) %}
+        {% if i > 0 %} » {% endif %}<li><a href="{{ url }}">{{ title }}</a></li>
+      {% endfor -%}
+    </ul>
+  </div>
+{% endif %}
+
+  <h2>Upload</h2>
+  
+  <div id="upload_section">
+    <div class="dragdrop">
+      <form id="upload" class="dropzone" autocomplete="off" method="post" enctype="multipart/form-data" action="/edit/_upload">
+        {% module xsrf_form_html() %}
+        <input type="hidden" name="album" value="{{ album['url'] }}" />
+        <div class="fallback">
+          <label for="file">Select files:</label>
+          <input name="file" type="file" multiple />
+        </div>
+      </form>
+      <div>
+        <button class="submit" type="submit" form="upload">Upload</button>
+      </div>
+    </div>
+    <div class="subalbum">
+      <form id="dircreate" autocomplete="off" method="post" enctype="multipart/form-data" action="/edit/_upload">
+        {% module xsrf_form_html() %}
+        <input type="hidden" name="album" value="{{ album['url'] }}" />
+        <div>
+          <label for="album">Create sub-album:</label>
+          <input name="newdir" type="text" />
+        </div>
+        <div>
+          <label for="thumbnail">Thumbnail (optional):</label>
+          <input name="thumbnail" type="file" accept="image/*" />
+        </div>
+        <div>
+          <button type="submit" form="dircreate">Create Album</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 {% set albums = [] %}
-{% for alb in album.albums %}
-  {% if alb.title != "thumbnails" %}
+{% for alb in album['albums'] %}
+  {% if alb['title'] != "thumbnails" %}
     {% set _ = albums.append(alb) %}
   {% endif %}
 {% endfor %}
@@ -10,114 +132,135 @@
 {% set images = [] %}
 {% set videos = [] %}
 {% set files = [] %}
-{% for media in album.medias %}
-  {% if media.type == "image" %}
+{% for media in album['medias'] %}
+  {% if media['type'] == "image" %}
     {% set _ = images.append(media) %}
-  {% elif media.type == "video" %}
+  {% elif media['type'] == "video" %}
     {% set _ = videos.append(media) %}
   {% else %}
     {% set _ = files.append(media) %}
   {% endif %}
 {% endfor %}
+  <form id="album" autocomplete="off" method="post">
+    {% module xsrf_form_html() %}
 
-{% block extra_head %}
-  <link rel="stylesheet" href="{{ theme.url }}/edit.css">
-{% endblock extra_head %}
-
-{% block content %}
-
-  {% if album.description %}
-  <div id="description" class="row">
-  {{ album.description }}
-  </div>
-  {% endif %}
+    <h2>Album Metadata</h2>
+    <div id="album_meta">
+      <div>
+        <label for="title">Title:</label> <input type="text" name="title" value="{{ album['meta']['title'] }}" />
+      </div>
+      <div>
+        <label for="summary">Short Summary:</label> <input type="text" name="summary" value="{{ album['meta']['summary'] }}" />
+      </div>
+      <div>
+        <label for="description">Detailed Description (html allowed):</label><br><textarea type="text" name="description">{{ album['meta']['description'] }}</textarea>
+      </div>
+      <div>
+        {% set sort = album['meta']['meta'].get('sort',[''])[0] %}
+        <input type="hidden" name="raw_sort" value="{{ sort }}" />
+        {% set sort_reverse = sort and sort[0] == '-' %}
+        {% if sort_reverse %}
+          {% set sort = sort[1:] %}
+        {% endif %}
+        <label for="sort">Sort:</label> <select name="sort">
+          <option value="filename" {% if sort == 'filename' %}selected{% endif %}>Filename Alphabetical</option>
+          <option value="meta.orderweight" {% if sort == 'meta.orderweight' %}selected{% endif %}>Meta Orderweight</option>
+        </select>
+        <label for="sort_reverse">Reversed:</label> <input type="checkbox" name="sort_reverse" value="true" {% if sort_reverse %}checked{% endif %} />
+      </div>
+      <div>
+        <button type="submit">Update</button>
+      </div>
+    </div>
 
   {% if albums %}
     <h2>Albums</h2>
-    <div class="album-list">
+    <div class="album-list gallery sortable">
     {% for alb in albums %}
-      <div class="menu-img thumbnail">
-        <a href="{{ alb.meta.link[0] if alb.meta.link and alb.meta.link[0] else alb.url }}">
-          <img src="{{ alb.thumbnail }}" class="album_thumb"
-               alt="{{ alb.title }}" title="{{ alb.title }}" /></a>
-        <div class="caption">
-          <span class="title">{{ alb.title }}</span>
-          {% if alb.meta.summary and alb.meta.summary[0] %}<br>{{ alb.meta.summary[0] }}{% endif %}
-        </div>
-      </div>
+      {% module Template('album_edit_medias.html', media=alb) %}
     {% endfor %}
     </div>
   {% endif %}
 
-  {% if album.medias %}
-    {% if album.zip %}
-    <div class="additionnal-infos">
-      <p><a href="{{ album.zip }}"
-            title="Download a zip archive with all media">Download ZIP</a></p>
-    </div>
-    {% endif %}
-
+  {% if album['medias'] %}
     {% if images %}
       <h2>Images</h2>
-      <div class="gallery gallery_pswp" itemscope itemtype="http://schema.org/ImageGallery">
+      <div class="gallery sortable">
       {% for media in images %}
-        <figure class="gallery__img--secondary thumbnail"
-                itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
-                data-orig="{{ media.big_url }}">
-          <a href="{{ media.url }}" itemprop="contentUrl" data-size="{{media.input_size.width}}x{{media.input_size.height}}">
-            <img src="{{ theme.url }}/echo/blank.gif"
-                 data-echo="{{ media.thumbnail }}"
-                 alt="{{ media.url }}" itemprop="thumbnail" title="{{ media.exif.datetime }}" />
-          </a>
-          <div class="lightbox_caption" itemprop="caption description">{{ media.title }} - {{ media.exif.datetime }}<br>{{ media.description }}</div>
-          <figcaption><span class="title">{{ media.title }}</span>{% if media.meta.summary and media.meta.summary[0] %}<br>{{ media.meta.summary[0] }}{% endif %}</figcaption>
-        </figure>
+        {% module Template('album_edit_medias.html', media=media) %}
       {% endfor %}
-    </div>
+      </div>
     {% endif %}
 
     {% if videos %}
       <h2>Videos</h2>
-      <div class="gallery gallery_pswp" itemscope itemtype="http://schema.org/ImageGallery">
+      <div class="gallery sortable">
       {% for media in videos %}
-        <figure class="gallery__img--secondary thumbnail video"
-                itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
-                data-orig="{{ media.big_url }}">
-          <a href="{{ media.url }}" itemprop="contentUrl" data-type="video"
-             data-video='<div class="video"><div class="video__container"><video controls><source src="{{ media.url }}" type="{{ media.mime }}" /></video></div></div>'>
-          <div class="video-overlay" style="line-height:{{settings['thumb_size'][1]}}px">
-            <span class="material-icons">play_circle_outline</span>
-          </div>
-          <img src="{{ theme.url }}/echo/blank.gif"
-               data-echo="{{ media.thumbnail }}"
-               alt="{{ media.thumbnail }}" itemprop="thumbnail" title="" />
-          </a>
-          <div class="lightbox_caption" itemprop="caption description">{{ media.title }}<br>{{ media.description }}</div>
-          <figcaption>{{ media.title }}{% if media.meta.summary and media.meta.summary[0] %}<br>{{ media.meta.summary[0] }}{% endif %}</figcaption>
-        </figure>
+        {% module Template('album_edit_medias.html', media=media) %}
       {% endfor %}
       </div>
     {% endif %}
 
     {% if files %}
       <h2>Other Files</h2>
-      <div class="gallery">
+      <div class="gallery sortable">
       {% for media in files %}
-        <figure class="gallery__img--secondary thumbnail file">
-          <a href="{{ media.big_url }}" target="_blank">
-          <img src="{{ theme.url }}/echo/blank.gif"
-               data-echo="{{ media.thumbnail }}"
-               alt="{{ media.thumbnail }}" itemprop="thumbnail" title="" />
-          </a>
-          <div class="lightbox_caption" itemprop="caption description">{{ media.title }}<br>{{ media.description }}</div>
-          <figcaption>{{ media.title }}{% if media.meta.summary and media.meta.summary[0] %}<br>{{ media.meta.summary[0] }}{% endif %}</figcaption>
-        </figure>
+        {% module Template('album_edit_medias.html', media=media) %}
       {% endfor %}
       </div>
     {% endif %}
   {% endif %}
+  </form>
 {% endblock %}
 
 {% block extra_footer %}
-  <script src="{{ theme.url }}/app.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<script>
+Dropzone.autoDiscover = false;
+$(function(){
+  $('.sortable').each(function(){
+    let base = this;
+    $(this).sortable({
+      stop: function( event, ui ) {
+        console.log("sort stop!", base);
+
+        // set to orderweight
+        $('select[name="sort"]').val('meta.orderweight');
+        $('input[name="sort_reverse"]').val([]);
+
+        // reweight all albums and media
+        $('.sortable input[name^="orderweight"]').each(function(index){
+          $(this).val(index);
+        });
+        $('form').submit();
+      }
+    });
+  });
+
+
+  let uploader = new Dropzone("#upload", {
+    autoProcessQueue: false,
+    addRemoveLinks: true,
+    dictRemoveFile: '<span class="marker ui-icon ui-icon-trash">×</span>',
+    dictCancelUpload: '<span class="marker ui-icon ui-icon-trash">×</span>',
+    uploadMultiple: true,
+    parallelUploads: 10000,
+    maxFiles: 10,
+    maxFilesize: 1000000000,
+  });
+  uploader.on('successmultiple', function(){
+    window.location.replace(window.location.href);
+  });
+  $('#upload_section button.submit').on('click', function(e){
+    e.stopPropagation();
+    e.preventDefault();
+    if (uploader.getRejectedFiles().length > 0) {
+      return;
+    }
+    uploader.processQueue();
+  });
+});
+</script>
 {% endblock %}

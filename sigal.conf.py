@@ -13,7 +13,7 @@
 
 # Source directory. Can be set here or as the first argument of the `sigal
 # build` command
-source = 'pictures'
+source = 'albums'
 
 # Destination directory. Can be set here or as the second argument of the
 # `sigal build` command (default: '_build')
@@ -154,7 +154,7 @@ orig_link = True
 # The settings take a list of patterns matched with the fnmatch module on the
 # path relative to the source directory:
 # http://docs.python.org/2/library/fnmatch.html
-ignore_directories = []#'thumbnails']
+ignore_directories = ['thumbnails', '*/thumbnails']
 ignore_files = []#['*6570569_IceCube_backdrop.jpg','*ChamberlainWallpaper_final.jpg']
 
 # -------------
@@ -304,6 +304,11 @@ plugins = [
 #    'password': 'password',
 #    'ask_password': False
 # }
+
+# Settings for extended caching
+extended_caching_options = {
+    'global_cache': False,
+}
 
 # Settings for nonmedia_files plugin
 nonmedia_files_options = {

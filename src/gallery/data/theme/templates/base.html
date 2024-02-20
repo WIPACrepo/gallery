@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
 
-    <title>{{ album.title }} - {{ index_title }}</title>
+    <title>{{ album['title'] }} - {{ index_title }}</title>
     <meta name="description" content="{{ album['description'] }}">
     <meta name="author" content="{{ album['author'] }}">
     <meta name="viewport" content="width=device-width">
@@ -13,7 +13,9 @@
     <meta property="og:url" content="{{ album['url'] }}"/>
     <meta property="og:site_name" content="{{ index_title }}"/>
     <meta property="og:description" content="{{ album['description'] }}"/>
+    {% if 'thumbnail' in album and album['thumbnail'] %}
     <meta property="og:image" content="{{ album['thumbnail'] }}"/>
+    {% endif %}
     <link rel="stylesheet" href="{{ theme['url'] }}/styles.css">
     {% if user_css %}
     <link rel="stylesheet" href="{{ theme['url'] }}/{{ user_css }}">
