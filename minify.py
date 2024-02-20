@@ -17,7 +17,10 @@ def main():
     for root,dirs,files in os.walk(args.src):
         for f in files:
             src = Path(root) / f
-            if src.suffix == '.js':
+            if src.suffix == '.js' and '.min.js' not in src.name:
+                if src.with_stem(src.stem + '.min').exists():
+                    print(f'skipping {src}, already minified')
+                    continue
                 dest = Path(root.replace(str(args.src), str(args.dest))) / f
                 dest = dest.with_stem(dest.stem + '.min')
                 print(f'minifying {src} to {dest}')

@@ -1,8 +1,8 @@
-{% if album.breadcrumb %}
+{% if album['breadcrumb'] %}
   <div class="breadcrumb">
     <ul>
       <li><a href="{{ album.index_url }}"><span class="material-icons">home</span></a></li> »
-      {% for url, title in album.breadcrumb %}
+      {% for url, title in album['breadcrumb'] %}
         <li><a href="{{ url }}">{{ title }}</a></li>{% if not loop.last %} » {% endif %}
       {% endfor -%}
     </ul>
