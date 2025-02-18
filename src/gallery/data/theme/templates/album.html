@@ -1,1 +1,150 @@
-{% extends "album_list.html" %}
+{% extends "base.html" %}
+
+{% block extra_head %}
+  <script src="{{ template_url }}/photoswipe.min.js"></script>
+  <script src="{{ template_url }}/photoswipe-ui-default.min.js"></script>
+  <script src="{{ template_url }}/echo/echo.min.js"></script>
+  <link rel="stylesheet" href="{{ template_url }}/photoswipe.css">
+  <link rel="stylesheet" href="{{ template_url }}/default-skin/default-skin.css">
+{% end extra_head %}
+
+{% block content %}
+
+  {% if album.meta['description'] %}
+  <div id="description" class="row">
+  {{ album.meta['description'] }}
+  </div>
+  {% end %}
+
+  {% if album.albums %}
+    <h2>Albums</h2>
+    <div class="album-list">
+    {% for alb in album.albums %}
+      <div class="menu-img thumbnail">
+        <a href="{{ alb.meta.get('link', alb.url) }}">
+          <img src="{{ alb.thumbnail }}" class="album_thumb"
+               alt="{{ alb.meta['title'] }}" title="{{ alb.meta['title'] }}" /></a>
+        <div class="caption">
+          <span class="title">{{ alb.meta['title'] }}</span>
+          {% if alb.meta['summary'] %}<br>{{ alb.meta['summary'] }}{% end %}
+        </div>
+      </div>
+    {% end %}
+    </div>
+  {% end %}
+
+  {% if album.images %}
+    <h2>Images</h2>
+    <div class="gallery gallery_pswp" itemscope itemtype="http://schema.org/ImageGallery">
+    {% for image in album.images %}
+      <figure class="gallery__img--secondary thumbnail"
+              itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
+              data-orig="{{ image.url }}">
+        <a href="{{ image.url }}" itemprop="contentUrl" data-size="{{image.width}}x{{image.height}}">
+          <img src="{{ template_url }}/echo/blank.gif"
+                data-echo="{{ image.thumbnail }}"
+                alt="{{ image.url }}" itemprop="thumbnail" title="{{ image.meta['title'] }}" />
+        </a>
+        <div class="lightbox_caption" itemprop="caption description">{{ image.meta['title'] }}{% if image.meta['summary'] %}<br>{{ image.meta['summary'] }}{% end %}<br>{{ image.meta['description'] }}</div>
+        <figcaption><span class="title">{{ image.meta['title'] }}</span>{% if image.meta['summary'] %}<br>{{ image.meta['summary'] }}{% end %}</figcaption>
+      </figure>
+    {% end %}
+  </div>
+  {% end %}
+
+  {% if album.videos %}
+    <h2>Videos</h2>
+    <div class="gallery gallery_pswp" itemscope itemtype="http://schema.org/ImageGallery">
+    {% for video in album.videos %}
+      <figure class="gallery__img--secondary thumbnail video"
+              itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
+              data-orig="{{ video.url }}">
+        <a href="{{ video.url }}" itemprop="contentUrl" data-type="video"
+            data-video='<div class="video"><div class="video__container"><video controls><source src="{{ video.url }}" type="{{ video.mime }}" /></video></div></div>'>
+        <div class="video-overlay">
+          <span class="material-icons">play_circle_outline</span>
+        </div>
+        <img src="{{ template_url }}/echo/blank.gif"
+              data-echo="{{ video.thumbnail }}"
+              alt="{{ video.thumbnail }}" itemprop="thumbnail" title="" />
+        </a>
+        <div class="lightbox_caption" itemprop="caption description">{{ video.meta['title'] }}<br>{{ video.meta['description'] }}</div>
+        <figcaption>{{ video.meta['title'] }}{% if video.meta['summary'] %}<br>{{ video.meta['summary'] }}{% end %}</figcaption>
+      </figure>
+    {% end %}
+    </div>
+  {% end %}
+
+  {% if album.files %}
+    <h2>Other Files</h2>
+    <div class="gallery">
+    {% for file in album.files %}
+      <figure class="gallery__img--secondary thumbnail file">
+        <a href="{{ file.url }}" target="_blank">
+        <img src="{{ template_url }}/echo/blank.gif"
+              data-echo="{{ file.thumbnail }}"
+              alt="{{ file.thumbnail }}" itemprop="thumbnail" title="" />
+        </a>
+        <div class="lightbox_caption" itemprop="caption description">{{ file.meta['title'] }}<br>{{ file.meta['description'] }}</div>
+        <figcaption>{{ file.meta['title'] }}{% if file.meta['summary'] %}<br>{{ file.meta['summary'] }}{% end %}</figcaption>
+      </figure>
+    {% end %}
+    </div>
+  {% end %}
+{% end %}
+
+{% block extra_footer %}
+  <!-- Root element of PhotoSwipe. Must have class pswp. -->
+  <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe.
+      It's a separate element as animating opacity is faster than rgba(). -->
+      <div class="pswp__bg"></div>
+
+      <!-- Slides wrapper with overflow:hidden. -->
+      <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides.
+          PhotoSwipe keeps only 3 of them in the DOM to save memory.
+          Don't modify these 3 pswp__item elements, data is added later on. -->
+          <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+          </div>
+
+          <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+          <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+              <!--  Controls are self-explanatory. Order can be changed. -->
+              <div class="pswp__counter"></div>
+              <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+              <button class="pswp__button pswp__button--share" title="Share"></button>
+              <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+              <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+              <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+              <!-- element will get class pswp__preloader-active when preloader is running -->
+              <div class="pswp__preloader">
+                <div class="pswp__preloader__icn">
+                  <div class="pswp__preloader__cut">
+                    <div class="pswp__preloader__donut"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+              <div class="pswp__share-tooltip"></div>
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+              <div class="pswp__caption__center"></div>
+            </div>
+          </div>
+      </div>
+  </div>
+  <script src="{{ template_url }}/app.min.js"></script>
+
+{% end %}

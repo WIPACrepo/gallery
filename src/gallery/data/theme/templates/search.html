@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-  <script src="{{ theme['url'] }}/echo/echo.min.js"></script>
-  <link rel="stylesheet" href="{{ theme['url'] }}/default-skin/default-skin.css">
-{% endblock extra_head %}
+  <link rel="stylesheet" href="{{ template_url }}/default-skin/default-skin.css">
+{% end extra_head %}
 
-{% block extra_body_class %}search{% endblock %}
+{% block extra_body_class %}search{% end %}
 
 {% block content %}
 
@@ -19,49 +18,37 @@
   <h2>Search Results</h2>
   <div class="search-overview">
     {% if results %}
-    {{ total }} results found. {% if total > limit %} Listing first {{ limit }}.{% endif %}
+    {{ total }} results found. {% if total > limit %} Listing first {{ limit }}.{% end %}
     {% else %}
     No results found.
-    {% endif %}
+    {% end %}
   </div>
   {% if results %}
   <div class="search-list">
     {% for ret in results %}
     <div class="search-result">
       <div class="thumbnail">
-        <a href="{{ ret['url'] }}">
-          <img src="{{ theme['url'] }}/echo/blank.gif" data-echo="{{ ret['thumbnail'] }}" />
+        <a href="{{ ret.url }}">
+          <img src="{{ ret.thumbnail }}" />
         </a>
       </div>
       <div class="details">
-        <div><span class="label">Type: </span><span class="type">{{ ret['type'] }}</span></div>
-        <div><span class="label">Title: </span><span class="title">{{ ret['title'] }}</span></div>
-        {% if ret['summary'] %}
-        <div><span class="label">Summary: </span><span class="summary">{{ ret['summary'] }}</span></div>
-        {% endif %}
-        {% if ret['keywords'] %}
-        <div><span class="label">Keywords: </span><span class="keywords">{{ ret['keywords'] }}</span></div>
-        {% endif %}
-        {% if ret.get('date') %}
-        <div><span class="label">Create Date: </span><span class="date">{{ ret['date'] }}</span></div>
-        {% endif %}
-        {% if ret.get('orig') %}
-        <div><span class="label">Raw url: </span><a href="{{ ret['orig'] }}"><span class="orig">{{ ret['orig'] }}</span></a></div>
-        {% endif %}
+        <div><span class="label">Type: </span><span class="type">{{ ret.type }}</span></div>
+        <div><span class="label">Title: </span><span class="title">{{ ret.meta['title'] }}</span></div>
+        {% if ret.meta.get('summary') %}
+        <div><span class="label">Summary: </span><span class="summary">{{ ret.meta['summary'] }}</span></div>
+        {% end %}
+        {% if ret.meta.get('keywords') %}
+        <div><span class="label">Keywords: </span><span class="keywords">{{ ret.meta['keywords'] }}</span></div>
+        {% end %}
+        {% if ret.meta.get('date') %}
+        <div><span class="label">Create Date: </span><span class="date">{{ ret.meta['date'] }}</span></div>
+        {% end %}
+        <div><span class="label">Raw url: </span><a href="{{ ret.url }}"><span class="orig">{{ ret.url }}</span></a></div>
       </div>
     </div>
-    {% endfor %}
+    {% end %}
   </div>
-  {% endif %}
+  {% end %}
 
-{% endblock %}
-
-{% block extra_footer %}
-<script>
-echo.init({
-  offset: 100,
-  throttle: 250,
-  unload: false
-});
-</script>
-{% endblock %}
+{% end %}

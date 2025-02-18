@@ -53,23 +53,22 @@ header {
   flex-wrap: wrap;
   direction: ltr;
   justify-content: space-between;
-  height: 6em;
+  margin: 1rem 1.5rem;
 }
 header > * {
   margin: auto 0;
-  flex: 0 1 28%;
+  flex: 0 1;
 }
-header .icecube_logo {
-  padding: 0 1em;
+header .logo {
+  width: 59px;
+  min-width: 59px;
 }
-header .icecube_logo .logo_full {
-  display: block;
-}
-header .icecube_logo .logo_crop {
-  display: none;
+header h1 a {
+  white-space: nowrap;
 }
 header .search-form {
-  margin: .5em 1em 1em;
+  min-width: 10em;
+  margin: .5em 0 1em;
   direction: ltr;
   justify-content: end;
 }
@@ -113,23 +112,26 @@ strong {
 }
 
 .content {
-  margin: 1em 2em;
+  margin: 1em 1.5em;
 }
 
 #menu {
-  width: 100%;
   background: #F7F7F7 none repeat scroll 0 0;
-  padding: 30px 0;
+  padding: 1rem 1.5rem;
 }
 
 #menu ul {
-  max-width: 1024px;
   margin: 0 auto;
+  display: flex;
 }
 
 #menu li {
-    display: inline;
-    list-style: none; /* pour enlever les puces sur IE7 */
+  padding: 0 .3rem;
+  margin: 0;
+  list-style: none; /* pour enlever les puces sur IE7 */
+}
+#menu li.edit {
+  margin-left: auto;
 }
 
 .album-list {
@@ -235,6 +237,7 @@ strong {
   top: 10px;
   width: 100%;
   pointer-events: none;
+  line-height: 150px;
 }
 .gallery__img--secondary.thumbnail.video .video-overlay .material-icons {
   font-size: 50px;
@@ -250,7 +253,6 @@ strong {
 }
 
 .breadcrumb {
-  margin: .5em 0;
   font-size: 1.5rem;
 }
 .breadcrumb ul {
@@ -263,10 +265,13 @@ strong {
 }
 .breadcrumb span.material-icons {
   font-size: inherit;
-  vertical-align: middle;
+  vertical-align: text-bottom;
 }
 .breadcrumb a {
   text-decoration: none;
+}
+.breadcrumb .edit {
+  margin-left: .35em;
 }
 #description {
   margiN: .5em 0;
@@ -314,6 +319,14 @@ footer span:not(:last-child):after {
     font-size: 2.5rem;
   }
 }
+@media screen and (min-width: 991px) {
+  header .search-form .search-bar {
+    position: absolute;
+    margin-right: 4em;
+    height: 1.5em;
+    margin-top: .1em;
+  }
+}
 @media screen and (max-width: 990px) {
   .content {
     margin: 1em 1.5em;
@@ -325,22 +338,6 @@ footer span:not(:last-child):after {
   .gallery__img--secondary {
     flex-basis: 33%;
     max-width: 33%;
-  }
-  header {
-    height: 7em;
-  }
-  body.search header {
-    height: 5em;
-  }
-  header .icecube_logo .logo_full {
-    display: none;
-  }
-  header .icecube_logo .logo_crop {
-    display: block;
-  }
-  header .icecube_logo {
-    flex-basis: auto;
-    padding: 0 .5em;
   }
   header h1 {
     font-size: 2rem;
@@ -358,6 +355,9 @@ footer span:not(:last-child):after {
   }
   header .search-form .search-bar {
     max-width: 70%;
+  }
+  #menu {
+    padding: .75rem 1.5rem;
   }
   h2 {
     font-size: 1.4rem;
@@ -385,6 +385,12 @@ footer span:not(:last-child):after {
   body.search .search-form .search-bar {
     flex-basis: 100%;
     margin-right: 0;
+  }
+  header h1 a {
+    white-space: wrap;
+  }
+  #menu {
+    padding: .5rem 1.5rem;
   }
 }
 
@@ -425,4 +431,8 @@ body.search .search-form {
 }
 .search-result .details .label {
   font-weight: 600;
+}
+
+#upload_section h2 {
+  margin: .5em 0;
 }

@@ -73,27 +73,15 @@
     display: none
   }
   </style>
-{% endblock extra_head %}
+{% end extra_head %}
 
 {% block content %}
-{% if album['breadcrumb_edit'] %}
-  <div class="breadcrumb">
-    <ul>
-      <li><a href="{{ album['index_url'] }}"><span class="material-icons">home</span></a></li> »
-      {% for i, (url, title) in enumerate(album['breadcrumb_edit']) %}
-        {% if i > 0 %} » {% endif %}<li><a href="{{ url }}">{{ title }}</a></li>
-      {% endfor -%}
-    </ul>
-  </div>
-{% endif %}
-
-  <h2>Upload</h2>
-  
   <div id="upload_section">
     <div class="dragdrop">
+      <h2>Upload Media</h2>
       <form id="upload" class="dropzone" autocomplete="off" method="post" enctype="multipart/form-data" action="/edit/_upload">
         {% module xsrf_form_html() %}
-        <input type="hidden" name="album" value="{{ album['url'] }}" />
+        <input type="hidden" name="album" value="{{ album.url }}" />
         <div class="fallback">
           <label for="file">Select files:</label>
           <input name="file" type="file" multiple />
@@ -104,11 +92,12 @@
       </div>
     </div>
     <div class="subalbum">
+      <h2>Create Sub-Album</h2>
       <form id="dircreate" autocomplete="off" method="post" enctype="multipart/form-data" action="/edit/_upload">
         {% module xsrf_form_html() %}
-        <input type="hidden" name="album" value="{{ album['url'] }}" />
+        <input type="hidden" name="album" value="{{ album.url }}" />
         <div>
-          <label for="album">Create sub-album:</label>
+          <label for="album">Sub-album name:</label>
           <input name="newdir" type="text" />
         </div>
         <div>
@@ -122,96 +111,75 @@
     </div>
   </div>
 
-{% set albums = [] %}
-{% for alb in album['albums'] %}
-  {% if alb['title'] != "thumbnails" %}
-    {% set _ = albums.append(alb) %}
-  {% endif %}
-{% endfor %}
-
-{% set images = [] %}
-{% set videos = [] %}
-{% set files = [] %}
-{% for media in album['medias'] %}
-  {% if media['type'] == "image" %}
-    {% set _ = images.append(media) %}
-  {% elif media['type'] == "video" %}
-    {% set _ = videos.append(media) %}
-  {% else %}
-    {% set _ = files.append(media) %}
-  {% endif %}
-{% endfor %}
   <form id="album" autocomplete="off" method="post">
     {% module xsrf_form_html() %}
 
     <h2>Album Metadata</h2>
     <div id="album_meta">
       <div>
-        <label for="title">Title:</label> <input type="text" name="title" value="{{ album['meta']['title'] }}" />
+        <label for="title">Title:</label> <input type="text" name="title" value="{{ album.meta['title'] }}" />
       </div>
       <div>
-        <label for="summary">Short Summary:</label> <input type="text" name="summary" value="{{ album['meta']['summary'] }}" />
+        <label for="summary">Short Summary:</label> <input type="text" name="summary" value="{{ album.meta['summary'] }}" />
       </div>
       <div>
-        <label for="description">Detailed Description (html allowed):</label><br><textarea type="text" name="description">{{ album['meta']['description'] }}</textarea>
+        <label for="description">Detailed Description:</label><br><textarea type="text" name="description">{{ album.meta['description'] }}</textarea>
       </div>
       <div>
-        {% set sort = album['meta']['meta'].get('sort',[''])[0] %}
+        {% set sort = album.meta.get('sort','') %}
         <input type="hidden" name="raw_sort" value="{{ sort }}" />
         {% set sort_reverse = sort and sort[0] == '-' %}
         {% if sort_reverse %}
           {% set sort = sort[1:] %}
-        {% endif %}
+        {% end %}
         <label for="sort">Sort:</label> <select name="sort">
-          <option value="filename" {% if sort == 'filename' %}selected{% endif %}>Filename Alphabetical</option>
-          <option value="meta.orderweight" {% if sort == 'meta.orderweight' %}selected{% endif %}>Meta Orderweight</option>
+          <option value="filename" {% if sort == 'filename' %}selected{% end %}>Filename Alphabetical</option>
+          <option value="meta.orderweight" {% if sort == 'meta.orderweight' %}selected{% end %}>Meta Orderweight</option>
         </select>
-        <label for="sort_reverse">Reversed:</label> <input type="checkbox" name="sort_reverse" value="true" {% if sort_reverse %}checked{% endif %} />
+        <label for="sort_reverse">Reversed:</label> <input type="checkbox" name="sort_reverse" value="true" {% if sort_reverse %}checked{% end %} />
       </div>
       <div>
         <button type="submit">Update</button>
       </div>
     </div>
 
-  {% if albums %}
+  {% if album.albums %}
     <h2>Albums</h2>
     <div class="album-list gallery sortable">
-    {% for alb in albums %}
-      {% module Template('album_edit_medias.html', media=alb) %}
-    {% endfor %}
+    {% for item in album.albums %}
+      {% module Template('album_edit_medias.html', item=item) %}
+    {% end %}
     </div>
-  {% endif %}
+  {% end %}
 
-  {% if album['medias'] %}
-    {% if images %}
-      <h2>Images</h2>
-      <div class="gallery sortable">
-      {% for media in images %}
-        {% module Template('album_edit_medias.html', media=media) %}
-      {% endfor %}
-      </div>
-    {% endif %}
+  {% if album.images %}
+    <h2>Images</h2>
+    <div class="gallery sortable">
+    {% for item in album.images %}
+      {% module Template('album_edit_medias.html', item=item) %}
+    {% end %}
+    </div>
+  {% end %}
 
-    {% if videos %}
-      <h2>Videos</h2>
-      <div class="gallery sortable">
-      {% for media in videos %}
-        {% module Template('album_edit_medias.html', media=media) %}
-      {% endfor %}
-      </div>
-    {% endif %}
+  {% if album.videos %}
+    <h2>Videos</h2>
+    <div class="gallery sortable">
+    {% for item in album.videos %}
+      {% module Template('album_edit_medias.html', item=item) %}
+    {% end %}
+    </div>
+  {% end %}
 
-    {% if files %}
-      <h2>Other Files</h2>
-      <div class="gallery sortable">
-      {% for media in files %}
-        {% module Template('album_edit_medias.html', media=media) %}
-      {% endfor %}
-      </div>
-    {% endif %}
-  {% endif %}
+  {% if album.files %}
+    <h2>Other Files</h2>
+    <div class="gallery sortable">
+    {% for item in album.files %}
+      {% module Template('album_edit_medias.html', item=item) %}
+    {% end %}
+    </div>
+  {% end %}
   </form>
-{% endblock %}
+{% end %}
 
 {% block extra_footer %}
 <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
@@ -263,4 +231,4 @@ $(function(){
   });
 });
 </script>
-{% endblock %}
+{% end %}

@@ -1,11 +1,11 @@
 <figure class="gallery__img--secondary thumbnail">
   <!--<div class="marker ui-icon ui-icon-arrow-4"></div>-->
   <div>
-    <a href="{{ media['url'] }}">
-      <img src="{{ media['thumbnail'] }}"
-           alt="{{ media['title'] }}" />
+    <a href="{{ item.url }}">
+      <img src="{{ item.thumbnail }}"
+           alt="{{ item.meta['title'] }}" />
     </a>
   </div>
-  <figcaption><span class="title">{{ media['title'] }}</span>{% if media['summary'] %}<br>{{ media['summary'] }}{% endif %}</figcaption>
-  <input type="hidden" name="orderweight-{{ media['name'] }}" value="{{ media.get('meta', {}).get('orderweight', ['0'])[0] }}" />
+  <figcaption><span class="title">{{ item.meta['title'] }}</span>{% if item.meta['summary'] %}<br>{{ item.meta['summary'] }}{% end %}</figcaption>
+  <input type="hidden" name="orderweight-{{ item.name }}" value="{{ item.meta.get('orderweight', ['0'])[0] }}" />
 </figure>

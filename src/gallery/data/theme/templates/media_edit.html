@@ -32,20 +32,9 @@
     padding: .2em .4em;
   }
   </style>
-{% endblock extra_head %}
+{% end extra_head %}
 
 {% block content %}
-{% if album['breadcrumb_edit'] %}
-  <div class="breadcrumb">
-    <ul>
-      <li><a href="{{ album['index_url'] }}"><span class="material-icons">home</span></a></li> »
-      {% for i, (url, title) in enumerate(album['breadcrumb_edit']) %}
-        {% if i > 0 %} » {% endif %}<li><a href="{{ url }}">{{ title }}</a></li>
-      {% endfor -%}
-    </ul>
-  </div>
-{% endif %}
-
   <form id="delete" autocomplete="off" method="POST" onsubmit="return confirm('Do you really want to delete this?');">
     {% module xsrf_form_html() %}
     <input type="hidden" name="delete" value="delete" />
@@ -60,13 +49,13 @@
     {% module xsrf_form_html() %}
     <div id="media_meta">
       <div>
-        <label for="title">Title:</label> <input type="text" name="title" value="{{ media['title'] }}" />
+        <label for="title">Title:</label> <input type="text" name="title" value="{{ media.meta['title'] }}" />
       </div>
       <div>
-        <label for="summary">Short Summary:</label> <input type="text" name="summary" value="{{ media['summary'] }}" />
+        <label for="summary">Short Summary:</label> <input type="text" name="summary" value="{{ media.meta['summary'] }}" />
       </div>
       <div>
-        <label for="description">Detailed Description (html allowed):</label><br><textarea type="text" name="description">{{ media['description'] }}</textarea>
+        <label for="description">Detailed Description:</label><br><textarea type="text" name="description">{{ media.meta['description'] }}</textarea>
       </div>
       <div>
         <button type="submit">Update</button>
@@ -75,25 +64,25 @@
 
     <h2>Thumbnail</h2>
     <div class="media thumbnail">
-      <img src="{{ media['thumbnail'] }}"
-           alt="{{ media['title'] }}" />
+      <img src="{{ media.thumbnail }}"
+           alt="{{ media.meta['title'] }}" />
     </div>
 
     <h2>Original</h2>
-    {% if media['type'] == 'image' %}
+    {% if media.type == 'image' %}
     <div class="media full">
-      <a href="{{ media['src'] }}" target="_blank">
-        <img src="{{ media['src'] }}"
-           alt="{{ media['title'] }}" />
+      <a href="{{ media.src }}" target="_blank">
+        <img src="{{ media.src }}"
+           alt="{{ media.meta['title'] }}" />
       </a>
     </div>
     {% else %}
     <div class="media link">
-      <a href="{{ media['src'] }}" target="_blank">link<span class="marker ui-icon ui-icon-extlink"></span></a>
+      <a href="{{ media.src }}" target="_blank">link<span class="marker ui-icon ui-icon-extlink"></span></a>
     </div>
-    {% endif %}
+    {% end %}
   </form>
-{% endblock %}
+{% end %}
 
 {% block extra_footer %}
 <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
@@ -103,4 +92,4 @@ $(function(){
     
 });
 </script>
-{% endblock %}
+{% end %}

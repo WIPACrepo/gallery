@@ -21,19 +21,17 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "aiohttp",
-    "beautifulsoup4",
     "elasticsearch",
-    "jsmin",
     "natsort",
-    "pymysql",
-    "sigal",
+    "pillow",
+    "redis",
     "wipac-dev-tools",
     "wipac-rest-tools",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
+convert = ["pymysql"]
 tests = ["pytest", "pytest-async"]
 
 [project.urls]
@@ -50,7 +48,7 @@ namespaces = true
 
 [tool.setuptools.package-data]
 gallery = [
-    "src/gallery/themes/**",
+    "src/gallery/data/themes/**",
 ]
 
 [tool.setuptools_scm]
@@ -58,7 +56,10 @@ write_to = "src/gallery/version.py"
 
 [tool.ruff]
 exclude = ["env", "*tests", "bin" , "_build*", "docs", "resources", "albums"]
-target-version = "py39"
+target-version = "py312"
 
 [tool.ruff.lint]
 ignore = ["E203", "E226", "E228", "E231", "E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

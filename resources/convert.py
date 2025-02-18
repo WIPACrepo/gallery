@@ -5,9 +5,11 @@ Take raw album files and DB info, and translate into new dir structure.
 """
 
 import argparse
+import json
 import os
 from io import StringIO
 from collections import Counter
+from functools import cached_property
 import logging
 from pathlib import Path
 from pprint import pprint
@@ -156,16 +158,33 @@ class DB:
             cursor.execute(sql, (g_id,))
             row = cursor.fetchone()
             return row['type']
+    
+    @cached_property
+    def users(self):
+        ret = {}
+        with self.connection.cursor() as cursor:
+            sql = 'select g_id, g_userName as username, g_fullName as name from g2_User'
+            cursor.execute(sql)
+            for row in cursor.fetchall():
+                ret[row['g_id']] = {
+                    'Username': row['username'],
+                    'User_fullname': row['name'],
+                }
+        return ret
 
     def get_details(self, g_id):
         details = {'id': g_id}
         with self.connection.cursor() as cursor:
-            sql = 'select g_title as Title, g_keywords as Keywords, g_summary as Summary, g_description as description from g2_Item where g_id = %s'
+            sql = 'select g_title as Title, g_keywords as Keywords, g_summary as Summary, g_description as description, g_ownerId as owner from g2_Item where g_id = %s'
             cursor.execute(sql, (g_id,))
-            details.update(cursor.fetchone())
+            ret = cursor.fetchone()
+            g_owner_id = ret.pop('owner', -1)
+            details.update(ret)
             for k in list(details.keys()):
                 if details[k] is None:
                     details[k] = ''
+
+            details.update(self.users.get(g_owner_id, {}))
 
             sql = 'select g_creationTimestamp as CreateDate, g_modificationTImestamp as ModDate, g_entityType as type from g2_Entity where g_id = %s'
             cursor.execute(sql, (g_id,))
@@ -244,6 +263,30 @@ class DB:
             cursor.execute(sql, (g_id,))
             return any(row['access'] for row in cursor.fetchall())
 
+
+def needs_reorientation(path):
+    try:
+        out = subprocess.check_output(['identify', '-quiet', '-format', '%[orientation]', str(path)], stderr=subprocess.DEVNULL)
+        return not any(x in out for x in [b'Undefined', b'Unrecognized', b'TopLeft'])
+    except Exception:
+        return False
+
+
+def read_metadata(path):
+    ret = {'title': '', 'keywords': '', 'summary': '', 'description': ''}
+    if path.exists():
+        with open(path) as f:
+            ret.update(json.load(f))
+    return ret
+
+
+def write_metadata(path, data):
+    ret = {'title': '', 'keywords': '', 'summary': '', 'description': ''}
+    ret.update(data)
+    with open(path, 'w') as f:
+        json.dump(ret, f, ensure_ascii=False, indent=2)
+
+
 def write_md(args, details):
     src_path = Path(args.source) / details['src_path']
     if not src_path.exists():
@@ -269,34 +312,37 @@ def write_md(args, details):
             raise OSError(f'{src_path} does not exist')
         src_path = Path(args.source) / details['src_path']
 
+    dest_path = Path(args.dest) / details['path']
     suffix = ''
     if details['type'] == 'GalleryAlbumItem':
-        path = Path(args.dest) / details['path'] / 'index.md'
+        path = Path(args.dest) / details['path'] / 'index.meta.json'
     else:
-        path = Path(args.dest) / details['path']
-        suffix = ''.join(path.suffixes)
+        suffix = ''.join(dest_path.suffixes).lower()
         if 'multiformat' in details and details['multiformat']:
-            path = path.with_name(path.name.replace('.', '_') + suffix)
-        if not path.exists():
-            path.parent.mkdir(parents=True, exist_ok=True)
-            if path.suffix.lower() in ('.jpg', '.png'):
-                subprocess.check_call(['convert', src_path, '-auto-orient', path])
+            dest_path = dest_path.with_name(dest_path.name.replace('.', '_') + suffix)
+        if not dest_path.exists():
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            if dest_path.suffix.lower() in ('.jpg', '.png'):
+                if needs_reorientation(src_path):
+                    subprocess.check_call(['convert', src_path, '-auto-orient', dest_path])
+                elif args.symlink:
+                    dest_path.symlink_to(src_path)
+                else:
+                    shutil.copy2(src_path, dest_path)
             else:
-                shutil.copy2(src_path, path)
-        path = path.with_name(path.name.replace(suffix, '') + '.md')
+                if args.symlink:
+                    dest_path.symlink_to(src_path)
+                else:
+                    shutil.copy2(src_path, dest_path)
+        path = dest_path.with_name(dest_path.name.replace(suffix, '') + '.meta.json')
 
-    assert path.name.endswith('.md')
+    assert path.name.endswith('.meta.json')
 
-    existing_data = None
-    if path.exists():
-        with path.open() as f:
-            existing_data = f.read()
-
-    f = StringIO()
+    metadata = {}
     for k in details:
         if not k[0].islower():
             v = unescape(str(details[k]))
-            print(f'{k}: {v}', file=f)
+            metadata[k.lower()] = v
 
     if details['type'] == 'GalleryAlbumItem' and details['sort']:
         sort = None
@@ -311,23 +357,25 @@ def write_md(args, details):
         if sort:
             if details['order'] == 'desc':
                 sort = '-'+sort
-            print(f'Sort: {sort}', file=f)
+            metadata['sort'] = sort
+
+    # generate thumbnail
+    if details['type'] == 'GalleryAlbumItem':
+        thumb_path = dest_path / 'thumbnails/thumb.jpg'
+    else:
+        thumb_path = dest_path.parent / 'thumbnails' / Path(details['path']).name
+        if suffix in ('.mp4','.avi','.webm','.mov'):
+            thumb_path = thumb_path.with_name(thumb_path.name.replace(suffix, '.jpg'))
 
     if 'thumbnails' in details and (details['type'] == 'GalleryAlbumItem'
-                                    or suffix in ('.gif','.mp4','.avi','.webm','.mov')):
-        if details['type'] == 'GalleryAlbumItem':
-            thumb_path = Path(args.dest) / details['path'] / 'thumbnails/thumb.jpg'
-        else:
-            thumb_path = (Path(args.dest) / details['path']).parent / 'thumbnails' / Path(details['path']).name
-            if suffix in ('.mp4','.avi','.webm','.mov'):
-                thumb_path = thumb_path.with_name(thumb_path.name.replace(suffix, '.jpg'))
+                                    or suffix not in ('.jpg','.jpeg','.png')):
         thumb_path.parent.mkdir(parents=True, exist_ok=True)
         if not thumb_path.exists():
             for p in details['thumbnails']:
                 thumb_path_try = Path(args.source) / p
                 if thumb_path_try.exists() and thumb_path_try.stat().st_size > 0:
                     print(f'found thumb {thumb_path_try} {thumb_path}')
-                    if thumb_path_try.suffix.lower() in ('.jpg', '.png'):
+                    if thumb_path_try.suffix.lower() in ('.jpg', '.jpeg', '.png'):
                         subprocess.check_call(['convert', thumb_path_try, '-auto-orient', thumb_path])
                     else:
                         shutil.copy2(thumb_path_try, thumb_path)
@@ -341,19 +389,30 @@ def write_md(args, details):
                         shutil.copy2(thumb_path_try, thumb_path)
                     break
         if thumb_path.exists():
-            print(f'Thumbnail: thumbnails/{thumb_path.name}', file=f)
+            metadata['thumbnail'] = f'thumbnails/{thumb_path.name}'
 
-    print('', file=f)
+    if 'thumbnail' not in metadata and dest_path.suffix.lower() in ('.jpg','.jpeg','.png'):
+        if not thumb_path.exists():
+            print(f'generating thumbnail for {dest_path}')
+            thumb_path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                subprocess.check_call(['convert', dest_path, '-resize', '150x150', '-auto-orient', thumb_path])
+            except Exception:
+                if thumb_path.exists():
+                    thumb_path.unlink()
+        if thumb_path.exists():
+            metadata['thumbnail'] = f'thumbnails/{thumb_path.name}'
+
     if details['description']:
-        print(f'{details["description"]}', file=f)
+        metadata['description'] = details["description"]
 
-    new_data = f.getvalue()
-    if existing_data and existing_data != new_data:
+    existing_data = read_metadata(path)
+    if existing_data != metadata:
         path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open('w') as f:
-            f.write(new_data)
-    #else:
-    #    print(f'.md already exists at {path}')
+        write_metadata(path, metadata)
+    else:
+        print(f'metadata already exists at {path}')
+
 
 def main():
     config = {
@@ -363,6 +422,7 @@ def main():
         'MYSQL_DBNAME': 'gallery2_internal',
     }
     parser = argparse.ArgumentParser()
+    parser.add_argument('--no-symlink', dest='symlink', default=True, action='store_false', help='use copy instead of symlink')
     parser.add_argument('source')
     parser.add_argument('cache')
     parser.add_argument('dest')
@@ -520,7 +580,7 @@ def main():
     for root,dirs,files in os.walk(args.dest):
         for path in list(dirs):
             fullpath = os.path.join(root, path)
-            if os.listdir(fullpath) == ['index.md']:
+            if os.listdir(fullpath) == ['index.meta.json']:
                 print('cleaning up empty dir', fullpath)
                 shutil.rmtree(fullpath)
 

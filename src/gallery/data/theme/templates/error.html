@@ -6,9 +6,9 @@
       margin: 1em 1em;
     }
   </style>
-{% endblock extra_head %}
+{% end extra_head %}
 
-{% block extra_body_class %}error{% endblock %}
+{% block extra_body_class %}error{% end %}
 
 {% block content %}
 <h2>That's an error</h2>
@@ -16,5 +16,5 @@
 <p>Error reason: {{ error['reason'] }}</p>
 {% else %}
 <p>Error code: {{ error['status_code'] }}</p>
-{% endif %}
-{% endblock content %}
+{% end %}
+{% end content %}
