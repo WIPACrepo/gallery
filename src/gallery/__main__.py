@@ -1,6 +1,6 @@
 import asyncio
 
-from .config import ENV, config_logging
+from .config import config_logging
 from .server import Server
 
 

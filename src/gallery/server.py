@@ -50,7 +50,7 @@ class BaseHandler(KeycloakUsernameMixin, RequestHandler):
             self.auth_data = data
             return data['sub']
         # Auth Failed
-        except Exception as e:
+        except Exception:
             if self.debug and 'Authorization' in self.request.headers:
                 logging.debug('Authorization: %r', self.request.headers['Authorization'])
             logging.debug('failed auth', exc_info=True)
@@ -144,12 +144,12 @@ class AlbumHandler(BaseHandler):
         basedir = Path(ENV.SOURCE)
         if not basedir.exists():
             logging.warning('album basedir %s does not exist', basedir)
-            raise HTTPError(500, reason=f'album source does not exist')
+            raise HTTPError(500, reason='album source does not exist')
 
         media_path = basedir / path.strip('/')
         if not media_path.exists():
             logging.warning('album path %s does not exist', media_path)
-            raise HTTPError(500, reason=f'album path does not exist')
+            raise HTTPError(500, reason='album path does not exist')
         elif media_path.is_dir():
             album = Album(media_path)
             title = f'Gallery - {media_path.name}'
@@ -253,12 +253,12 @@ class EditHandler(BaseHandler):
         basedir = Path(ENV.SOURCE)
         if not basedir.exists():
             logging.warning('album basedir %s does not exist', basedir)
-            raise HTTPError(500, reason=f'album source does not exist')
+            raise HTTPError(500, reason='album source does not exist')
 
         media_path = basedir / path.strip('/')
         if not media_path.exists():
             logging.warning('album path %s does not exist', media_path)
-            raise HTTPError(500, reason=f'album path does not exist')
+            raise HTTPError(500, reason='album path does not exist')
         elif media_path.is_dir():
             await self._get_album(media_path)
         else:
@@ -269,12 +269,12 @@ class EditHandler(BaseHandler):
         basedir = ENV.SOURCE
         if not basedir.exists():
             logging.warning('album basedir %s does not exist', basedir)
-            raise HTTPError(500, reason=f'album source does not exist')
+            raise HTTPError(500, reason='album source does not exist')
 
         media_path = basedir / path.strip('/')
         if not media_path.exists():
             logging.warning('album path %s does not exist', media_path)
-            raise HTTPError(500, reason=f'album path does not exist')
+            raise HTTPError(500, reason='album path does not exist')
         elif media_path.is_dir():
             if (await self._update_album(media_path)) is not False:
                 await self._get_album(media_path)
@@ -297,7 +297,7 @@ class UploadHandler(BaseHandler):
         basedir = ENV.SOURCE
         if not basedir.exists():
             logging.warning('album basedir %s does not exist', basedir)
-            raise HTTPError(500, reason=f'album source does not exist')
+            raise HTTPError(500, reason='album source does not exist')
 
         album_path = basedir / web_path.relative_to('/edit')
         logging.info('album_path: %s', album_path)

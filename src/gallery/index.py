@@ -3,11 +3,10 @@
 import argparse
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime
 import hashlib
 import logging
 from pathlib import Path
-import os
 import re
 from typing import Any, cast
 
@@ -16,7 +15,6 @@ from elasticsearch import AsyncElasticsearch, BadRequestError
 from elasticsearch.client import IndicesClient
 from elasticsearch.helpers import async_streaming_bulk
 
-from .albums import Album
 from .config import ENV, config_logging
 from .util import read_metadata, get_type, now
 

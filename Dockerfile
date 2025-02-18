@@ -3,7 +3,7 @@ FROM python:3.12
 RUN apt-get update && apt-get install -y fonts-freefont-ttf ffmpeg imagemagick && apt-get clean
 
 RUN useradd -m -U app
-RUN mkdir /app
+RUN mkdir /app && chown app:app /app
 
 WORKDIR /app
 USER app

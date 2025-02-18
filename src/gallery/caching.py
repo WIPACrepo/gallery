@@ -1,5 +1,4 @@
 import json
-import logging
 
 from redis.backoff import ExponentialBackoff
 from redis.asyncio.retry import Retry
