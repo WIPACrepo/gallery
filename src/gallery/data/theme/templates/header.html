@@ -1,0 +1,32 @@
+<header>
+  <div class="logo">
+    <a href="/">
+      <img class="logo" src="{{ template_url }}/icecube_logo_crop.png" alt="IceCube" style="height:60px;width:59px" />
+    </a>
+  </div>
+  <h1>
+    <a href="/">
+      IceCube Gallery
+    </a>
+  </h1>
+  <div class="search">
+    <form class="search-form" method="GET" action="/search">
+      <input class="search-bar" type="text" name="query" value="{% if search %}{{ search['query'] }}{% end %}" />
+      <button class="search-button" type="submit"><span class="material-icons">search</span></button>
+    </form>
+  </div>
+</header>
+<nav id="menu">
+  {% if breadcrumbs is not None %}
+  <div class="breadcrumb">
+    <ul>
+      <li><a href="/"><span class="material-icons">home</span></a></li>
+      {% if breadcrumbs %} » {% end %}
+      {% for i, (_url, _title) in enumerate(breadcrumbs) %}
+        {% if i > 0 %} » {% end %}<li><a href="{{ _url }}">{{ _title }}</a></li>
+      {% end %}
+      <li class="edit"><a href="/edit{{ request.path }}"><span class="material-icons">edit</span> Edit</a></li>
+    </ul>
+  </div>
+  {% end %}
+</nav>

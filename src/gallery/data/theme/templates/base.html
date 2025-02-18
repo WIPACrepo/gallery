@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <meta name="author" content="IceCube">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="{{ title }}"/>
+    <meta property="og:type" content="website"/>
+    {% if album %}
+    <meta property="og:url" content="{{ album.url }}"/>
+    {% end %}
+    <meta property="og:site_name" content="IceCube Gallery"/>
+    {% if album and album.meta.get('description') %}
+    <meta name="description" content="{{ album.meta['description'] }}">
+    <meta property="og:description" content="{{ album.meta['description'] }}"/>
+    {% elif media and media.meta.get('description') %}
+    <meta name="description" content="{{ media.meta['description'] }}">
+    <meta property="og:description" content="{{ media.meta['description'] }}"/>
+    {% else %}
+    <meta name="description" content="IceCube Gallery">
+    {% end %}
+    {% if album and album.thumbnail %}
+    <meta property="og:image" content="{{ album.thumbnail }}"/>
+    {% elif media and media.thumbnail %}
+    <meta property="og:image" content="{{ media.thumbnail }}"/>
+    {% end %}
+    <link rel="stylesheet" href="{{ template_url }}/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Aldrich&display=swap" rel="stylesheet">
+    {% block extra_head %}{% end extra_head %}
+  </head>
+  <body class="{% block extra_body_class %}{% end %}">
+    <div class="container">
+      {% include 'header.html' %}
+
+      <div class="content">
+        {% block content %}{% end %}
+      </div>
+
+      {% include 'footer.html' %}
+      {% block extra_footer %}{% end %}
+    </div>
+  </body>
+</html>

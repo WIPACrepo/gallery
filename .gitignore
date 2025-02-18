@@ -129,5 +129,9 @@ dmypy.json
 .pyre/
 
 
-_build
+# ignore version
+src/gallery/version.py
+
+# misc dirs
+_build*
 albums

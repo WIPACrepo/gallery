@@ -1,18 +1,27 @@
-FROM python:3.10
+FROM python:3.12
 
-RUN apt-get update && apt-get install -y fonts-freefont-ttf ffmpeg && apt-get clean
+RUN apt-get update && apt-get install -y fonts-freefont-ttf ffmpeg imagemagick && apt-get clean
 
 RUN useradd -m -U app
 RUN mkdir /app
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
 WORKDIR /app
+
+COPY src /app/src
+COPY pyproject.toml /app/pyproject.toml
+
+RUN chown -R app:app /app
+
 USER app
 
-COPY . .
+ENV VIRTUAL_ENV=/app/venv
 
-ENV PYTHONPATH=/app
+RUN python3 -m venv $VIRTUAL_ENV
 
-CMD ["bash"]
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN ls -al
+
+RUN --mount=source=.git,target=.git,type=bind pip install -e .
+
+CMD ["python", "-m", "gallery"]
