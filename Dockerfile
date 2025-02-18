@@ -8,7 +8,7 @@ RUN mkdir /app && chown app:app /app
 WORKDIR /app
 USER app
 
-COPY . .
+COPY --chown=app:app --chmod=644 . .
 
 ENV VIRTUAL_ENV=/app/venv
 
