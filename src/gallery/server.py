@@ -60,6 +60,7 @@ class BaseHandler(KeycloakUsernameMixin, RequestHandler):
     def get_template_namespace(self):
         data = super().get_template_namespace()
         data.update({
+            'mode': 'view',
             'album': None,
             'media': None,
             'breadcrumbs': None,
@@ -173,6 +174,12 @@ class EditHandler(BaseHandler):
     """
     Handle album edit requests.
     """
+    def get_template_namespace(self):
+        data = super().get_template_namespace()
+        data.update({
+            'mode': 'edit',
+        })
+        return data
 
     async def _get_album(self, album_path):
         album = Album(album_path, prefix=Path('/edit'))
@@ -181,6 +188,9 @@ class EditHandler(BaseHandler):
 
     async def _update_album(self, album_path):
         if self.get_argument('delete', None) == 'delete':
+            album = Album(album_path, prefix=Path('/edit'))
+            if album.albums or album.images or album.videos or album.files:
+                raise HTTPError(400, reason="Cannot delete non-empty album")
             basedir = Path(ENV.SOURCE)
             web_path = Path('/edit') / album_path.relative_to(basedir)
             logging.info('deleting %s', album_path)
@@ -192,10 +202,29 @@ class EditHandler(BaseHandler):
             meta = read_metadata(album_path)
             meta['title'] = self.get_argument('title')
             meta['summary'] = self.get_argument('summary')
+            meta['keywords'] = self.get_argument('keywords')
             meta['description'] = self.get_argument('description')
             meta['sort'] = self.get_argument('sort')
             if self.get_argument('sort_reverse', 'false') == 'true':
                 meta['sort'] = '-' + meta['sort']
+
+            thumbnail = None
+            for _, items in self.request.files.items():
+                for item in items:
+                    thumbnail = item
+            if thumbnail:
+                logging.info("thumbnail: %r", thumbnail['filename'])
+                thumb_dir = album_path / 'thumbnails'
+                thumb_dir.mkdir(exist_ok=True)
+                thumb_path = thumb_dir / 'thumb.jpg'
+                thumb_path = thumb_path.with_suffix(Path(thumbnail['filename']).suffix)
+                if prev_thumb_path := meta.get('thumbnail',''):
+                    if prev_thumb_path != 'thumbnails/' + thumb_path.name:
+                        (album_path / prev_thumb_path).unlink(missing_ok=True)
+                with thumb_path.open('wb') as f:
+                    f.write(thumbnail['body'])
+                meta['thumbnail'] = 'thumbnails/' + thumb_path.name
+
             write_metadata(album_path, meta)
 
             if meta['sort'][0].strip('-') == 'meta.orderweight':
@@ -239,7 +268,26 @@ class EditHandler(BaseHandler):
         else:
             meta['title'] = self.get_argument('title')
             meta['summary'] = self.get_argument('summary')
+            meta['keywords'] = self.get_argument('keywords')
             meta['description'] = self.get_argument('description')
+
+            thumbnail = None
+            for _, items in self.request.files.items():
+                for item in items:
+                    thumbnail = item
+            if thumbnail:
+                logging.info("thumbnail: %r", thumbnail['filename'])
+                thumb_dir = media_path.parent / 'thumbnails'
+                thumb_dir.mkdir(exist_ok=True)
+                thumb_path = thumb_dir / media_path.name
+                thumb_path = thumb_path.with_suffix(Path(thumbnail['filename']).suffix)
+                if prev_thumb_path := meta.get('thumbnail',''):
+                    if prev_thumb_path != 'thumbnails/' + thumb_path.name:
+                        (media_path.parent / prev_thumb_path).unlink(missing_ok=True)
+                with thumb_path.open('wb') as f:
+                    f.write(thumbnail['body'])
+                meta['thumbnail'] = 'thumbnails/' + thumb_path.name
+
             write_metadata(media_path, meta)
             await self._add_to_es(media_path, meta=meta)
 
@@ -306,10 +354,9 @@ class UploadHandler(BaseHandler):
             logging.info("New Subalbum!")
             logging.info("name: %s", newdir)
             thumbnail = None
-            for fieldname, items in self.request.files.items():
+            for _, items in self.request.files.items():
                 for item in items:
-                    thumbnail = item['filename']
-            logging.info("thumbnail: %r", thumbnail)
+                    thumbnail = item
 
             new_album_path = album_path / sanitize_name(newdir)
             if not new_album_path.exists():
@@ -320,10 +367,13 @@ class UploadHandler(BaseHandler):
                     meta['user'] = self.current_user
                 meta['createdate'] = time.time()
                 if thumbnail:
+                    logging.info("thumbnail: %r", thumbnail['filename'])
                     thumb_dir = new_album_path / 'thumbnails'
                     thumb_dir.mkdir()
-                    thumb_path = thumb_dir / thumbnail.filename
+                    thumb_path = thumb_dir / sanitize_name(thumbnail['filename'])
                     thumb_path = thumb_path.with_stem('thumb')
+                    with thumb_path.open('wb') as f:
+                        f.write(thumbnail['body'])
                     meta['thumbnail'] =  'thumbnails/' + thumb_path.name
                 write_metadata(new_album_path, meta)
             await self._add_to_es(new_album_path, meta=meta)

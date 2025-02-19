@@ -25,7 +25,13 @@
       {% for i, (_url, _title) in enumerate(breadcrumbs) %}
         {% if i > 0 %} » {% end %}<li><a href="{{ _url }}">{{ _title }}</a></li>
       {% end %}
+      {% if mode == "view" %}
       <li class="edit"><a href="/edit{{ request.path }}"><span class="material-icons">edit</span> Edit</a></li>
+      {% elif mode == "edit" and album is not None %}
+      <li class="edit"><a href="/{{ album.url.lstrip('/edit') }}"><span class="material-icons">photo_library</span> View</a></li>
+      {% elif mode == "edit" and media is not None %}
+      <li class="edit"><a href="/{{ media.album_url.lstrip('/edit') }}"><span class="material-icons">photo_library</span> View</a></li>
+      {% end %}
     </ul>
   </div>
   {% end %}
