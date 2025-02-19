@@ -12,6 +12,12 @@
     padding: 0 .25em;
     min-height: 2em;
   }
+  #media_meta .thumbnail {
+    text-align: left;
+  }
+  #media_meta .thumbnail p {
+    margin: .1em 0 0;
+  }
   #media_meta textarea {
     width: 100%;
     min-height: 4em;
@@ -45,7 +51,7 @@
       </div>
     </div>
   </form>
-  <form id="media" autocomplete="off" method="POST">
+  <form id="media" autocomplete="off" method="POST" enctype="multipart/form-data">
     {% module xsrf_form_html() %}
     <div id="media_meta">
       <div>
@@ -55,17 +61,24 @@
         <label for="summary">Short Summary:</label> <input type="text" name="summary" value="{{ media.meta['summary'] }}" />
       </div>
       <div>
+        <label for="keywords">Keywords:</label> <input type="text" name="keywords" value="{{ media.meta['keywords'] }}" />
+      </div>
+      <div>
         <label for="description">Detailed Description:</label><br><textarea type="text" name="description">{{ media.meta['description'] }}</textarea>
+      </div>
+      <div>
+        <label for="thumbnail">Thumbnail:</label>
+        <input name="thumbnail" type="file" accept="image/*" />
+        {% if media.thumbnail %}
+        <div class="thumbnail">
+          <p>Existing thumbnail:</p>
+          <img src="{{ media.thumbnail }}" />
+        </div>
+        {% end %}
       </div>
       <div>
         <button type="submit">Update</button>
       </div>
-    </div>
-
-    <h2>Thumbnail</h2>
-    <div class="media thumbnail">
-      <img src="{{ media.thumbnail }}"
-           alt="{{ media.meta['title'] }}" />
     </div>
 
     <h2>Original</h2>

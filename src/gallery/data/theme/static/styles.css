@@ -123,6 +123,7 @@ strong {
 #menu ul {
   margin: 0 auto;
   display: flex;
+  flex-wrap: wrap;
 }
 
 #menu li {
@@ -274,7 +275,7 @@ strong {
   margin-left: .35em;
 }
 #description {
-  margiN: .5em 0;
+  margin: .5em 0;
   font-size: .9rem;
 }
 a, a:visited {

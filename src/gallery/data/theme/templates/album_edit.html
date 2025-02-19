@@ -18,6 +18,12 @@
     width: 100%;
     min-height: 4em;
   }
+  #album_meta .thumbnail {
+    text-align: left;
+  }
+  #album_meta .thumbnail p {
+    margin: .1em 0 0;
+  }
   #upload_section {
     margin: 1em 0 2em;
     display: flex;
@@ -72,6 +78,17 @@
   .dropzone .dz-preview:not(.dz-processing) .dz-progress {
     display: none
   }
+  #delete {
+    margin: 1em 0 2em;
+  }
+  #delete p {
+    margin: 0;
+  }
+  #delete button {
+    color: #ac0000;
+    font-weight: 500;
+    padding: .2em .4em;
+  }
   </style>
 {% end extra_head %}
 
@@ -108,10 +125,18 @@
           <button type="submit" form="dircreate">Create Album</button>
         </div>
       </form>
+
+      <form id="delete" autocomplete="off" method="POST" onsubmit="return confirm('Do you really want to delete this?');">
+        {% module xsrf_form_html() %}
+        <h2>Delete Album</h2>
+        <input type="hidden" name="delete" value="delete" />
+        <p>Note: album must be empty first!</p>
+        <button type="submit">Delete</button>
+      </form>
     </div>
   </div>
 
-  <form id="album" autocomplete="off" method="post">
+  <form id="album" autocomplete="off" method="post" enctype="multipart/form-data">
     {% module xsrf_form_html() %}
 
     <h2>Album Metadata</h2>
@@ -121,6 +146,9 @@
       </div>
       <div>
         <label for="summary">Short Summary:</label> <input type="text" name="summary" value="{{ album.meta['summary'] }}" />
+      </div>
+      <div>
+        <label for="keywords">Keywords:</label> <input type="text" name="keywords" value="{{ album.meta['keywords'] }}" />
       </div>
       <div>
         <label for="description">Detailed Description:</label><br><textarea type="text" name="description">{{ album.meta['description'] }}</textarea>
@@ -137,6 +165,16 @@
           <option value="meta.orderweight" {% if sort == 'meta.orderweight' %}selected{% end %}>Meta Orderweight</option>
         </select>
         <label for="sort_reverse">Reversed:</label> <input type="checkbox" name="sort_reverse" value="true" {% if sort_reverse %}checked{% end %} />
+      </div>
+      <div>
+        <label for="thumbnail">Thumbnail:</label>
+        <input name="thumbnail" type="file" accept="image/*" />
+        {% if album.thumbnail %}
+        <div class="thumbnail">
+          <p>Existing thumbnail:</p>
+          <img src="{{ album.thumbnail }}" />
+        </div>
+        {% end %}
       </div>
       <div>
         <button type="submit">Update</button>

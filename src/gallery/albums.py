@@ -36,7 +36,6 @@ class Album:
         self.meta = read_metadata(path)
         if not self.meta['title']:
             self.meta['title'] = path.name
-        self.thumbnail = get_thumbnail(path)
         self.albums = []
         self.images = []
         self.videos = []
@@ -82,6 +81,12 @@ class Album:
         self.images.sort(key=sort_key, reverse=reverse_sort)
         self.videos.sort(key=sort_key, reverse=reverse_sort)
         self.files.sort(key=sort_key, reverse=reverse_sort)
+        
+        if 'thumbnail' in self.meta:
+            basedir = Path(ENV.SOURCE)
+            self.thumbnail = str(Path('/_src') / path.relative_to(basedir) / self.meta['thumbnail'])
+        else:
+            self.thumbnail = get_thumbnail(path)
 
 
 class AlbumItem:

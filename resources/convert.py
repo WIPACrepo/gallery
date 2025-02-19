@@ -365,7 +365,7 @@ def write_md(args, details):
     else:
         thumb_path = dest_path.parent / 'thumbnails' / Path(details['path']).name
         if suffix in ('.mp4','.avi','.webm','.mov'):
-            thumb_path = thumb_path.with_name(thumb_path.name.replace(suffix, '.jpg'))
+            thumb_path = thumb_path.with_suffix('.jpg')
 
     if 'thumbnails' in details and (details['type'] == 'GalleryAlbumItem'
                                     or suffix not in ('.jpg','.jpeg','.png')):
@@ -395,11 +395,7 @@ def write_md(args, details):
         if not thumb_path.exists():
             print(f'generating thumbnail for {dest_path}')
             thumb_path.parent.mkdir(parents=True, exist_ok=True)
-            try:
-                subprocess.check_call(['convert', dest_path, '-resize', '150x150', '-auto-orient', thumb_path])
-            except Exception:
-                if thumb_path.exists():
-                    thumb_path.unlink()
+            subprocess.check_call(['convert', dest_path, '-resize', '150x150', '-auto-orient', thumb_path])
         if thumb_path.exists():
             metadata['thumbnail'] = f'thumbnails/{thumb_path.name}'
 
