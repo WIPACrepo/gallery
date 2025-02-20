@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.0.2 (2025-02-20)
+
+### W
+
+- We need the async version of elasticsearch
+  ([`6025f31`](https://github.com/WIPACrepo/gallery/commit/6025f317ce06a91c13931d9f33a16d14435c4ac3))
+
+
 ## v0.0.1 (2025-02-19)
 
 ### 
