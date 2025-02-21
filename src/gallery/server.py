@@ -20,7 +20,7 @@ from .albums import Album, AlbumItem, Media
 from .config import ENV
 from .index import Indexer
 from .caching import RedisInstance
-from .util import read_metadata, write_metadata, get_type
+from .util import read_metadata, write_metadata
 
 
 logger = logging.getLogger('server')
