@@ -1,6 +1,18 @@
 # CHANGELOG
 
 
+## v0.0.3 (2025-02-21)
+
+### A
+
+- Automatic thumbnails when uploading ([#13](https://github.com/WIPACrepo/gallery/pull/13),
+  [`263871e`](https://github.com/WIPACrepo/gallery/commit/263871ea5400c0ecd8711f27619329135787b3ff))
+
+* automatically make a thumbnail when an image is uploaded * if uploading a custom thumbnail, make
+  sure it's resized and auto-rotated from exif * make search faster by removing the photoswipe hash
+  lookup, replacing with image hashes in the album page
+
+
 ## v0.0.2 (2025-02-20)
 
 ### W
