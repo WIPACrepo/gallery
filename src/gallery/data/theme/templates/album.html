@@ -20,7 +20,7 @@
     <h2>Albums</h2>
     <div class="album-list">
     {% for alb in album.albums %}
-      <div class="menu-img thumbnail">
+      <div id="{{ alb.name }}" class="menu-img thumbnail">
         <a href="{{ alb.meta.get('link', alb.url) }}">
           <img src="{{ alb.thumbnail }}" class="album_thumb"
                alt="{{ alb.meta['title'] }}" title="{{ alb.meta['title'] }}" /></a>
@@ -37,7 +37,7 @@
     <h2>Images</h2>
     <div class="gallery gallery_pswp" itemscope itemtype="http://schema.org/ImageGallery">
     {% for image in album.images %}
-      <figure class="gallery__img--secondary thumbnail"
+      <figure id="{{ image.name }}" class="gallery__img--secondary thumbnail"
               itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
               data-orig="{{ image.url }}">
         <a href="{{ image.url }}" itemprop="contentUrl" data-size="{{image.width}}x{{image.height}}">
@@ -56,7 +56,7 @@
     <h2>Videos</h2>
     <div class="gallery gallery_pswp" itemscope itemtype="http://schema.org/ImageGallery">
     {% for video in album.videos %}
-      <figure class="gallery__img--secondary thumbnail video"
+      <figure id="{{ video.name }}" class="gallery__img--secondary thumbnail video"
               itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
               data-orig="{{ video.url }}">
         <a href="{{ video.url }}" itemprop="contentUrl" data-type="video"
@@ -79,7 +79,7 @@
     <h2>Other Files</h2>
     <div class="gallery">
     {% for file in album.files %}
-      <figure class="gallery__img--secondary thumbnail file">
+      <figure id="{{ file.name }}" class="gallery__img--secondary thumbnail file">
         <a href="{{ file.url }}" target="_blank">
         <img src="{{ template_url }}/echo/blank.gif"
               data-echo="{{ file.thumbnail }}"

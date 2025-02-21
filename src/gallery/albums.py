@@ -81,7 +81,7 @@ class Album:
         self.images.sort(key=sort_key, reverse=reverse_sort)
         self.videos.sort(key=sort_key, reverse=reverse_sort)
         self.files.sort(key=sort_key, reverse=reverse_sort)
-        
+
         if 'thumbnail' in self.meta:
             basedir = Path(ENV.SOURCE)
             self.thumbnail = str(Path('/_src') / path.relative_to(basedir) / self.meta['thumbnail'])
@@ -96,7 +96,8 @@ class AlbumItem:
             prefix = Path('/')
 
         self.url = str(prefix / path.relative_to(basedir))
-        self.album_url = str(prefix / path.relative_to(basedir).parent)
+        self.album_url = str(prefix / path.relative_to(basedir).parent) + '#' + path.name
+        self.src =  str(Path('/_src') / path.relative_to(basedir))
         self.name = path.name
         self.type = 'album'
 
@@ -124,8 +125,8 @@ class Media(AlbumItem):
             prefix = Path('/_src')
         basedir = Path(ENV.SOURCE)
 
+        # this may be a different prefix than AlbumItem
         self.url = str(prefix / path.relative_to(basedir))
-        self.src =  str(Path('/_src') / path.relative_to(basedir))
         self.type = get_type(path)
         self.mime = get_mime(path)
 
