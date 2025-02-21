@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.0.4 (2025-02-21)
+
+### F
+
+- Fix media redirect ([#14](https://github.com/WIPACrepo/gallery/pull/14),
+  [`55afd50`](https://github.com/WIPACrepo/gallery/commit/55afd50e015c57ae999b9a8daf096b3f84883df8))
+
+
 ## v0.0.3 (2025-02-21)
 
 ### A
