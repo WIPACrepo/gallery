@@ -197,7 +197,7 @@ class AlbumHandler(BaseHandler):
             title = f'Gallery - {media_path.name}'
             body = self.render_string('album.html', title=title, album=album, breadcrumbs=self._breadcrumbs(media_path))
         else:
-            self.redirect('/_src'+path)
+            self.redirect('/_src/'+path)
             return
 
         try:
