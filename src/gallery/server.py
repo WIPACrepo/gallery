@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 from pathlib import Path
 import shutil
+import subprocess
 import time
 from typing import Any
 
@@ -19,7 +20,7 @@ from .albums import Album, AlbumItem, Media
 from .config import ENV
 from .index import Indexer
 from .caching import RedisInstance
-from .util import read_metadata, write_metadata, get_type
+from .util import read_metadata, write_metadata
 
 
 logger = logging.getLogger('server')
@@ -126,6 +127,46 @@ class BaseHandler(KeycloakUsernameMixin, RequestHandler):
 
         return ret
 
+    def _handle_thumbnail(self, path: Path, upload_thumb: Any = None, prev_thumb: str|None = None) -> str | None:
+        if path.is_dir():
+            thumb_path = path / 'thumbnails' / 'thumb.jpg'
+        else:
+            thumb_path = path.parent / 'thumbnails' / path.name
+        thumb_path.parent.mkdir(exist_ok=True)
+        if upload_thumb:
+            logging.info("thumbnail upload: %r", upload_thumb['filename'])
+            thumb_path = thumb_path.with_suffix(Path(upload_thumb['filename']).suffix)
+            with thumb_path.open('wb') as f:
+                f.write(upload_thumb['body'])
+            try:
+                subprocess.check_call(['convert', str(thumb_path), '-resize', '150x150', '-auto-orient', str(thumb_path)])
+            except Exception:
+                return None
+        else:
+            if prev_thumb:
+                return None
+            if path.is_dir():
+                logging.info("auto thumbnail for dir")
+                for src_path in path.iterdir():
+                    if src_path.name == 'thumbnails' or src_path.name.endswith('.meta.json'):
+                        continue
+                    if src_path.is_file() and src_path.suffix in ENV.IMG_EXTENSIONS:
+                        break
+                else:
+                    return None
+            else:
+                logging.info("auto thumbnail for media")
+                src_path = path
+            try:
+                subprocess.check_call(['convert', str(src_path), '-resize', '150x150', '-auto-orient', str(thumb_path)])
+            except Exception:
+                return None
+
+        if prev_thumb:
+            if prev_thumb != 'thumbnails/' + thumb_path.name:
+                (thumb_path.parent.parent / prev_thumb).unlink(missing_ok=True)
+        return 'thumbnails/' + thumb_path.name
+
 
 class AlbumHandler(BaseHandler):
     async def get(self, path):
@@ -212,18 +253,10 @@ class EditHandler(BaseHandler):
             for _, items in self.request.files.items():
                 for item in items:
                     thumbnail = item
+            thumbnail = self._handle_thumbnail(album_path, upload_thumb=thumbnail, prev_thumb=meta.get('thumbnail'))
             if thumbnail:
-                logging.info("thumbnail: %r", thumbnail['filename'])
-                thumb_dir = album_path / 'thumbnails'
-                thumb_dir.mkdir(exist_ok=True)
-                thumb_path = thumb_dir / 'thumb.jpg'
-                thumb_path = thumb_path.with_suffix(Path(thumbnail['filename']).suffix)
-                if prev_thumb_path := meta.get('thumbnail',''):
-                    if prev_thumb_path != 'thumbnails/' + thumb_path.name:
-                        (album_path / prev_thumb_path).unlink(missing_ok=True)
-                with thumb_path.open('wb') as f:
-                    f.write(thumbnail['body'])
-                meta['thumbnail'] = 'thumbnails/' + thumb_path.name
+                logging.info("set thumbnail: %s", thumbnail)
+                meta['thumbnail'] = thumbnail
 
             write_metadata(album_path, meta)
 
@@ -275,18 +308,10 @@ class EditHandler(BaseHandler):
             for _, items in self.request.files.items():
                 for item in items:
                     thumbnail = item
+            thumbnail = self._handle_thumbnail(media_path, upload_thumb=thumbnail, prev_thumb=meta.get('thumbnail'))
             if thumbnail:
-                logging.info("thumbnail: %r", thumbnail['filename'])
-                thumb_dir = media_path.parent / 'thumbnails'
-                thumb_dir.mkdir(exist_ok=True)
-                thumb_path = thumb_dir / media_path.name
-                thumb_path = thumb_path.with_suffix(Path(thumbnail['filename']).suffix)
-                if prev_thumb_path := meta.get('thumbnail',''):
-                    if prev_thumb_path != 'thumbnails/' + thumb_path.name:
-                        (media_path.parent / prev_thumb_path).unlink(missing_ok=True)
-                with thumb_path.open('wb') as f:
-                    f.write(thumbnail['body'])
-                meta['thumbnail'] = 'thumbnails/' + thumb_path.name
+                logging.info("set thumbnail: %s", thumbnail)
+                meta['thumbnail'] = thumbnail
 
             write_metadata(media_path, meta)
             await self._add_to_es(media_path, meta=meta)
@@ -366,33 +391,36 @@ class UploadHandler(BaseHandler):
                 if self.current_user:
                     meta['user'] = self.current_user
                 meta['createdate'] = time.time()
+                thumbnail = self._handle_thumbnail(new_album_path, upload_thumb=thumbnail)
                 if thumbnail:
-                    logging.info("thumbnail: %r", thumbnail['filename'])
-                    thumb_dir = new_album_path / 'thumbnails'
-                    thumb_dir.mkdir()
-                    thumb_path = thumb_dir / sanitize_name(thumbnail['filename'])
-                    thumb_path = thumb_path.with_stem('thumb')
-                    with thumb_path.open('wb') as f:
-                        f.write(thumbnail['body'])
-                    meta['thumbnail'] =  'thumbnails/' + thumb_path.name
+                    logging.info("set thumbnail: %s", thumbnail)
+                    meta['thumbnail'] = thumbnail
                 write_metadata(new_album_path, meta)
             await self._add_to_es(new_album_path, meta=meta)
         else:
             logging.info("Upload!")
             logging.info("Args: %r", self.request.body_arguments)
             files = []
-            for fieldname, items in self.request.files.items():
+            for _, items in self.request.files.items():
                 for item in items:
                     name = sanitize_name(item['filename'])
                     media_path = album_path / name
                     with open(media_path, 'wb') as f:
                         f.write(item['body'])
+                    try:
+                        subprocess.check_call(['convert', str(media_path), '-auto-orient', str(media_path)])
+                    except Exception:
+                        return None
 
                     meta = read_metadata(media_path)
                     meta['title'] = item['filename']
                     if self.current_user:
                         meta['user'] = self.current_user
                     meta['createdate'] = time.time()
+                    thumbnail = self._handle_thumbnail(media_path)
+                    if thumbnail:
+                        logging.info("set thumbnail: %s", thumbnail)
+                        meta['thumbnail'] = thumbnail
                     write_metadata(media_path, meta)
                     await self._add_to_es(media_path, meta=meta)
 
@@ -406,44 +434,6 @@ class SearchHandler(BaseHandler):
     """
     Handle searches
     """
-    def _get_pswp_hash(self, url_path, existing_album=None):
-        """Get a photoswipe hash for a media file"""
-        logging.info('getting pswp hash')
-        if existing_album:
-            images = existing_album.images
-            videos = existing_album.videos
-        else:
-            if url_path.startswith('/'):
-                url_path = url_path[1:]
-            orig_name = Path(url_path).name
-            basedir = Path(ENV.SOURCE)
-            if not url_path:
-                album_path = basedir
-            else:
-                album_path = (basedir / url_path).parent
-            images = []
-            videos = []
-            for path in album_path.iterdir():
-                if path.is_file():
-                    type_ = get_type(path)
-                    if type_ == 'image':
-                        images.append(path)
-                    elif type_ == 'video':
-                        videos.append(path)
-
-        gid = 0
-        for pid, media in enumerate(images):
-            if media.name == orig_name:
-                logging.info('pswp hash %d.%d', gid+1, pid+1)
-                return f'#&gid={gid+1}&pid={pid+1}'
-        gid = 1
-        for pid, media in enumerate(videos):
-            if media.name == orig_name:
-                logging.info('pswp hash %d.%d', gid+1, pid+1)
-                return f'#&gid={gid+1}&pid={pid+1}'
-
-        return ''
-
     def _process_results(self, results):
         basedir = ENV.SOURCE
         ret = []
@@ -456,9 +446,6 @@ class SearchHandler(BaseHandler):
                 media = AlbumItem(media_path)
             else:
                 media = Media(media_path)
-                if media.type in ('image', 'video'):
-                    if hash := self._get_pswp_hash(doc['path']):
-                        media.url = media.album_url + hash
 
             ret.append(media)
         return ret
