@@ -237,10 +237,7 @@ class EditHandler(BaseHandler):
             web_path = Path('/edit') / album_path.relative_to(basedir)
             logging.info('deleting %s', album_path)
             shutil.rmtree(album_path)
-            try:
-                await self._remove_from_es(album_path)
-            except Exception:
-                logging.info('error removing from ES', exc_info=True)
+            await self._remove_from_es(album_path)
             self.redirect(str(web_path.parent))
             ret = False
         else:
@@ -277,8 +274,8 @@ class EditHandler(BaseHandler):
 
         try:
             await self.page_cache.delete(str(album_path))
-        except Exception:
-            logging.info('error remoging from cache', exc_info=True)
+        except Exception as e:
+            logging.info('error removng %s from cache: %r', album_path, e)
 
         return ret
 
@@ -302,10 +299,7 @@ class EditHandler(BaseHandler):
                 thumb_path = media_path.parent / t
                 if thumb_path.exists():
                     thumb_path.unlink()
-            try:
-                await self._remove_from_es(media_path)
-            except Exception:
-                logging.info('error removing from ES', exc_info=True)
+            await self._remove_from_es(media_path)
             self.redirect(str(web_path.parent))
             ret = False
         else:
@@ -328,8 +322,8 @@ class EditHandler(BaseHandler):
 
         try:
             await self.page_cache.delete(str(media_path.parent))
-        except Exception:
-            logging.info('error remoging from cache', exc_info=True)
+        except Exception as e:
+            logging.info('error removing %s from cache: %r', media_path.parent, e)
 
         return ret
 
