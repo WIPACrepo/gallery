@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.0.7 (2025-02-24)
+
+### M
+
+- Maybe this will clear the cache? ([#17](https://github.com/WIPACrepo/gallery/pull/17),
+  [`2df19d6`](https://github.com/WIPACrepo/gallery/commit/2df19d6d75e9d26ec6187d7102da21634a0c6588))
+
+
 ## v0.0.6 (2025-02-24)
 
 ### R
