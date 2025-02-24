@@ -151,7 +151,7 @@ class Indexer:
         root_path = ENV.SOURCE
         doc_path = str(path.relative_to(root_path))
         id_ = hashlib.sha1(doc_path.encode('utf8')).hexdigest()
-        await self.es.delete(self.index_name, id_, timeout=60)
+        await self.es.delete(index=self.index_name, id=id_, timeout=60)
 
     async def search(self, query, limit=100):
         return await self.es.search(index=self.es_index, body={

@@ -228,6 +228,7 @@ class EditHandler(BaseHandler):
         self.render('album_edit.html', title=title, album=album, breadcrumbs=self._breadcrumbs(album_path, prefix=Path('/edit')))
 
     async def _update_album(self, album_path):
+        ret = True
         if self.get_argument('delete', None) == 'delete':
             album = Album(album_path, prefix=Path('/edit'))
             if album.albums or album.images or album.videos or album.files:
@@ -236,9 +237,12 @@ class EditHandler(BaseHandler):
             web_path = Path('/edit') / album_path.relative_to(basedir)
             logging.info('deleting %s', album_path)
             shutil.rmtree(album_path)
-            await self._remove_from_es(album_path)
+            try:
+                await self._remove_from_es(album_path)
+            except Exception:
+                logging.info('error removing from ES', exc_info=True)
             self.redirect(str(web_path.parent))
-            return False
+            ret = False
         else:
             meta = read_metadata(album_path)
             meta['title'] = self.get_argument('title')
@@ -274,7 +278,9 @@ class EditHandler(BaseHandler):
         try:
             await self.page_cache.delete(str(album_path))
         except Exception:
-            pass
+            logging.info('error remoging from cache', exc_info=True)
+
+        return ret
 
     async def _get_media(self, media_path):
         media = Media(media_path, prefix=Path('/edit'))
@@ -282,6 +288,7 @@ class EditHandler(BaseHandler):
         self.render('media_edit.html', title=title, media=media, breadcrumbs=self._breadcrumbs(media_path, prefix=Path('/edit')))
 
     async def _update_media(self, media_path):
+        ret = True
         meta = read_metadata(media_path)
         if self.get_argument('delete', None) == 'delete':
             basedir = Path(ENV.SOURCE)
@@ -295,9 +302,12 @@ class EditHandler(BaseHandler):
                 thumb_path = media_path.parent / t
                 if thumb_path.exists():
                     thumb_path.unlink()
-            await self._remove_from_es(media_path)
+            try:
+                await self._remove_from_es(media_path)
+            except Exception:
+                logging.info('error removing from ES', exc_info=True)
             self.redirect(str(web_path.parent))
-            return False
+            ret = False
         else:
             meta['title'] = self.get_argument('title')
             meta['summary'] = self.get_argument('summary')
@@ -319,7 +329,9 @@ class EditHandler(BaseHandler):
         try:
             await self.page_cache.delete(str(media_path.parent))
         except Exception:
-            pass
+            logging.info('error remoging from cache', exc_info=True)
+
+        return ret
 
     @catch_error
     async def get(self, path):
