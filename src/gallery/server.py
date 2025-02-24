@@ -227,7 +227,7 @@ class EditHandler(BaseHandler):
         title = f'Editor - {album_path.name}'
         self.render('album_edit.html', title=title, album=album, breadcrumbs=self._breadcrumbs(album_path, prefix=Path('/edit')))
 
-    async def _update_album(self, album_path):
+    async def _update_album(self, album_path, path):
         ret = True
         if self.get_argument('delete', None) == 'delete':
             album = Album(album_path, prefix=Path('/edit'))
@@ -273,7 +273,7 @@ class EditHandler(BaseHandler):
             await self._add_to_es(album_path, meta=meta)
 
         try:
-            await self.page_cache.delete(str(album_path))
+            await self.page_cache.delete(path)
         except Exception as e:
             logging.info('error removng %s from cache: %r', album_path, e)
 
@@ -284,7 +284,7 @@ class EditHandler(BaseHandler):
         title = f'Editor - {media.name}'
         self.render('media_edit.html', title=title, media=media, breadcrumbs=self._breadcrumbs(media_path, prefix=Path('/edit')))
 
-    async def _update_media(self, media_path):
+    async def _update_media(self, media_path, path):
         ret = True
         meta = read_metadata(media_path)
         if self.get_argument('delete', None) == 'delete':
@@ -321,7 +321,7 @@ class EditHandler(BaseHandler):
             await self._add_to_es(media_path, meta=meta)
 
         try:
-            await self.page_cache.delete(str(media_path.parent))
+            await self.page_cache.delete(path)
         except Exception as e:
             logging.info('error removing %s from cache: %r', media_path.parent, e)
 
@@ -355,10 +355,10 @@ class EditHandler(BaseHandler):
             logging.warning('album path %s does not exist', media_path)
             raise HTTPError(500, reason='album path does not exist')
         elif media_path.is_dir():
-            if (await self._update_album(media_path)) is not False:
+            if (await self._update_album(media_path, path=path)) is not False:
                 await self._get_album(media_path)
         else:
-            if (await self._update_media(media_path)) is not False:
+            if (await self._update_media(media_path, path=path)) is not False:
                 await self._get_media(media_path)
 
 def sanitize_name(name):
