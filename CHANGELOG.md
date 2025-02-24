@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.0.6 (2025-02-24)
+
+### R
+
+- Really delete things from the cache when they change
+  ([#16](https://github.com/WIPACrepo/gallery/pull/16),
+  [`6445506`](https://github.com/WIPACrepo/gallery/commit/64455065a160574e93aa4da6f4a959b18a7be2b2))
+
+
 ## v0.0.5 (2025-02-24)
 
 ### F
