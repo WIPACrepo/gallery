@@ -1,6 +1,18 @@
 # CHANGELOG
 
 
+## v0.0.5 (2025-02-24)
+
+### F
+
+- Fix deleting items ([#15](https://github.com/WIPACrepo/gallery/pull/15),
+  [`bb56e86`](https://github.com/WIPACrepo/gallery/commit/bb56e86ccc02b2f7200b92fe03e80985bad39c12))
+
+* fix deleting items
+
+* remove excess try/except
+
+
 ## v0.0.4 (2025-02-21)
 
 ### F
