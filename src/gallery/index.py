@@ -140,7 +140,7 @@ class Indexer:
         docs = [
             self.index_metadata(path, meta=meta)
         ]
-        async for ok, result in async_streaming_bulk(client=self.es, actions=docs, chunk_size=1000, max_retries=2, yield_ok=False, request_timeout=60):
+        async for ok, result in async_streaming_bulk(client=self.es, actions=docs, chunk_size=1000, max_retries=2, yield_ok=False, request_timeout=1):
             action, result = result.popitem()
             if not ok:
                 logging.warning('failed to process: %r', result)
@@ -151,7 +151,7 @@ class Indexer:
         root_path = ENV.SOURCE
         doc_path = str(path.relative_to(root_path))
         id_ = hashlib.sha1(doc_path.encode('utf8')).hexdigest()
-        await self.es.delete(index=self.index_name, id=id_, timeout=60)
+        await self.es.delete(index=self.index_name, id=id_, timeout='1s')
 
     async def search(self, query, limit=100):
         return await self.es.search(index=self.es_index, body={
