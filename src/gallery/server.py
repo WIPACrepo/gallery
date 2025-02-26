@@ -330,6 +330,12 @@ class EditHandler(BaseHandler):
             web_path = Path('/edit') / new_media_path.relative_to(basedir)
             self.redirect(str(web_path))
             ret = False
+
+            path = str(new_media_path.parent.relative_to(ENV.SOURCE)).strip('/')
+            try:
+                await self.page_cache.delete(path)
+            except Exception as e:
+                logging.info('error removing %s from cache: %r', path, e)
         else:
             meta['title'] = self.get_argument('title')
             meta['summary'] = self.get_argument('summary')
