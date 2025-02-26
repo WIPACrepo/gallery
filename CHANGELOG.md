@@ -2,6 +2,17 @@
 
 
 
+## v0.1.1 (2025-02-26)
+
+###  
+
+* Delete destination page cache for moved media (#19)
+
+* fix ES timeouts
+
+* delete page cache for move destination as well ([`39b6400`](https://github.com/WIPACrepo/gallery/commit/39b64004fba9e3dcfa4d06868e3cd80747e06c48))
+
+
 ## v0.1.0 (2025-02-26)
 
 ###  
