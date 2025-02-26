@@ -3,22 +3,22 @@
 {% block extra_head %}
   <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
   <style>
-  #media_meta {
+  .media_meta {
     margin: 1em .5em 2em;
     display: flex;
     flex-direction: column;
   }
-  #media_meta>div {
+  .media_meta>div {
     padding: 0 .25em;
     min-height: 2em;
   }
-  #media_meta .thumbnail {
+  .media_meta .thumbnail {
     text-align: left;
   }
-  #media_meta .thumbnail p {
+  .media_meta .thumbnail p {
     margin: .1em 0 0;
   }
-  #media_meta textarea {
+  .media_meta textarea {
     width: 100%;
     min-height: 4em;
   }
@@ -37,13 +37,21 @@
     font-weight: 500;
     padding: .2em .4em;
   }
+  input[type=text] {
+    width: 40em;
+    max-width: 100%;
+  }
+  label {
+    display: inline-block;
+    width: 10em;
+  }
   </style>
 {% end extra_head %}
 
 {% block content %}
   <form id="delete" autocomplete="off" method="POST" onsubmit="return confirm('Do you really want to delete this?');">
     {% module xsrf_form_html() %}
-    <input type="hidden" name="delete" value="delete" />
+    <input type="hidden" name="action" value="delete" />
     <div class="delete-holder">
       <h2>Media Metadata</h2>
       <div class="delete">
@@ -53,7 +61,8 @@
   </form>
   <form id="media" autocomplete="off" method="POST" enctype="multipart/form-data">
     {% module xsrf_form_html() %}
-    <div id="media_meta">
+    <input type="hidden" name="action" value="edit" />
+    <div class="media_meta">
       <div>
         <label for="title">Title:</label> <input type="text" name="title" value="{{ media.meta['title'] }}" />
       </div>
@@ -80,6 +89,24 @@
         <button type="submit">Update</button>
       </div>
     </div>
+  {% if media.type != 'album' %}
+  </form>
+  <form id="move" autocomplete="off" method="POST">
+    {% module xsrf_form_html() %}
+    <input type="hidden" name="action" value="move" />
+    <h2>Move Media</h2>
+    <div class="media_meta">
+      <div>
+        <label>Existing album path:</label> <input disabled type="text" value="{{ media.src[6: -1*len(media.name)-1] }}" />
+      </div>
+      <div>
+        <label for="new_album">New album path:</label> <input type="text" name="new_album" value="" />
+      </div>
+      <div>
+        <button type="submit">Update</button>
+      </div>
+    </div>
+  {% end %}
 
     <h2>Original</h2>
     {% if media.type == 'image' %}

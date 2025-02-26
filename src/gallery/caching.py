@@ -1,4 +1,5 @@
 import json
+import logging
 
 from redis.backoff import ExponentialBackoff
 from redis.asyncio.retry import Retry
@@ -36,6 +37,7 @@ class RedisInstance:
         return bool(await self.redis.exists(str(name)))
 
     async def get(self, name):
+        logging.debug('Cache-get: %s', name)
         assert self.redis is not None
         val = await self.redis.get(str(name))
         if not val:
@@ -44,10 +46,12 @@ class RedisInstance:
             return json.loads(val.decode('utf-8'))
 
     async def set(self, name, val):
+        logging.debug('Cache-set: %s', name)
         assert self.redis is not None
         await self.redis.set(str(name), json.dumps(val))
 
     async def delete(self, name):
+        logging.debug('Cache-delete: %s', name)
         assert self.redis is not None
         await self.redis.delete(str(name))
 
