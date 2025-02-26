@@ -19,9 +19,13 @@ Internal Media Gallery
 
 /search
 
-  * GET  - search page
+  * GET  - Search page
   * POST - Form submit for search
 
-/*
+/_src/<path>
 
-  * GET  - read-only albums/media handled by nginx
+  * GET  - Read-only media handled by nginx
+
+/<path>
+
+  * GET  - Formatted album page, or redirect to src for media
