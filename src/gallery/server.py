@@ -272,11 +272,11 @@ class EditHandler(BaseHandler):
 
             await self._add_to_es(album_path, meta=meta)
 
+        path = str(album_path.relative_to(ENV.SOURCE)).strip('/')
         try:
-            path = str(album_path.relative_to(ENV.SOURCE)).lstrip('/')
             await self.page_cache.delete(path)
         except Exception as e:
-            logging.info('error removng %s from cache: %r', album_path, e)
+            logging.info('error removng %s from cache: %r', path, e)
 
         return ret
 
@@ -288,7 +288,8 @@ class EditHandler(BaseHandler):
     async def _update_media(self, media_path):
         ret = True
         meta = read_metadata(media_path)
-        if self.get_argument('delete', None) == 'delete':
+        action = self.get_argument('action', None)
+        if action == 'delete':
             basedir = Path(ENV.SOURCE)
             web_path = Path('/edit') / media_path.relative_to(basedir)
             logging.info('deleting %s', media_path)
@@ -302,6 +303,32 @@ class EditHandler(BaseHandler):
                     thumb_path.unlink()
             await self._remove_from_es(media_path)
             self.redirect(str(web_path.parent))
+            ret = False
+        elif action == 'move':
+            basedir = Path(ENV.SOURCE)
+            new_album = self.get_argument('new_album', None)
+            if not new_album:
+                raise HTTPError(400, reason="Bad move path")
+            new_media_path = basedir / new_album / media_path.name
+            if not new_media_path.parent.is_dir():
+                raise HTTPError(400, reason="Bad move path")
+            logging.info('moving %s to %s', media_path, new_media_path)
+            media_path.rename(new_media_path)
+            meta_path = media_path.with_suffix('.meta.json')
+            if meta_path.exists():
+                new_meta_path = new_media_path.with_suffix('.meta.json')
+                meta_path.rename(new_meta_path)
+            if t := meta.get('thumbnail', None):
+                thumb_path = media_path.parent / t
+                if thumb_path.exists():
+                    new_thumb_path = new_media_path.parent / t
+                    thumb_path.rename(new_thumb_path)
+
+            await self._remove_from_es(media_path)
+            await self._add_to_es(new_media_path)
+
+            web_path = Path('/edit') / new_media_path.relative_to(basedir)
+            self.redirect(str(web_path))
             ret = False
         else:
             meta['title'] = self.get_argument('title')
@@ -321,11 +348,11 @@ class EditHandler(BaseHandler):
             write_metadata(media_path, meta)
             await self._add_to_es(media_path, meta=meta)
 
+        path = str(media_path.parent.relative_to(ENV.SOURCE)).strip('/')
         try:
-            path = str(media_path.parent.relative_to(ENV.SOURCE)).lstrip('/')
             await self.page_cache.delete(path)
         except Exception as e:
-            logging.info('error removing %s from cache: %r', media_path.parent, e)
+            logging.info('error removing %s from cache: %r', path, e)
 
         return ret
 
@@ -434,6 +461,12 @@ class UploadHandler(BaseHandler):
 
                     files.append(item['filename'])
             logging.info("Files: %d %r", len(files), files)
+
+        path = str(album_path.relative_to(ENV.SOURCE)).strip('/')
+        try:
+            await self.page_cache.delete(path)
+        except Exception as e:
+            logging.info('error removing %s from cache: %r', path, e)
 
         self.redirect(str(web_redirect))
 
