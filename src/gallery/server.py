@@ -1,8 +1,8 @@
 """
 Credentials store and refresh.
 """
-import asyncio
 from datetime import datetime
+from hashlib import blake2b
 import logging
 from pathlib import Path
 import shutil
@@ -58,6 +58,22 @@ class BaseHandler(KeycloakUsernameMixin, RequestHandler):
 
         return None
 
+    def version_hash(self, url):
+        if url.startswith('/_src'):
+            path = ENV.SOURCE / Path(url[6:])
+            try:
+                hasher = blake2b(digest_size=ENV.VERSION_HASH_DIGEST_SIZE, person=ENV.VERSION_HASH_PERSON)
+                b = bytearray(128 * 1024)
+                mv = memoryview(b)
+                with path.open('rb') as f:
+                    # Known issue with MyPy: https://github.com/python/typeshed/issues/2166
+                    for n in iter(lambda: f.readinto(mv), 0):
+                        hasher.update(mv[:n])
+                return f'{url}?v={hasher.hexdigest()}'
+            except Exception:
+                logging.info('cannot hash %s', url, exc_info=True)
+        return url
+
     def get_template_namespace(self):
         data = super().get_template_namespace()
         data.update({
@@ -69,6 +85,7 @@ class BaseHandler(KeycloakUsernameMixin, RequestHandler):
             'search': {},
             'auth_data': self.auth_data,
             'template_url': '/static',
+            'version_hash': self.version_hash,
         })
         logging.info("namespace: %r", data)
         return data
@@ -606,18 +623,7 @@ class Server:
 
     async def start(self):
         return
-        if not self.refresh_service_task:
-            self.refresh_service_task = asyncio.create_task(self.refresh_service.run())
 
     async def stop(self):
         await self.server.stop()
         await self.es.close()
-        return
-        if self.refresh_service_task:
-            self.refresh_service_task.cancel()
-            try:
-                await self.refresh_service_task
-            except asyncio.CancelledError:
-                pass  # ignore cancellations
-            finally:
-                self.refresh_service_task = None

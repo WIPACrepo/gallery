@@ -21,9 +21,9 @@
     <meta name="description" content="IceCube Gallery">
     {% end %}
     {% if album and album.thumbnail %}
-    <meta property="og:image" content="{{ album.thumbnail }}"/>
+    <meta property="og:image" content="{{ version_hash(album.thumbnail) }}"/>
     {% elif media and media.thumbnail %}
-    <meta property="og:image" content="{{ media.thumbnail }}"/>
+    <meta property="og:image" content="{{ version_hash(media.thumbnail) }}"/>
     {% end %}
     <link rel="stylesheet" href="{{ template_url }}/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">

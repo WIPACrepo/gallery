@@ -22,7 +22,7 @@
     {% for alb in album.albums %}
       <div id="{{ alb.name }}" class="menu-img thumbnail">
         <a href="{{ alb.meta.get('link', alb.url) }}">
-          <img src="{{ alb.thumbnail }}" class="album_thumb"
+          <img src="{{ version_hash(alb.thumbnail) }}" class="album_thumb"
                alt="{{ alb.meta['title'] }}" title="{{ alb.meta['title'] }}" /></a>
         <div class="caption">
           <span class="title">{{ alb.meta['title'] }}</span>
@@ -39,10 +39,10 @@
     {% for image in album.images %}
       <figure id="{{ image.name }}" class="gallery__img--secondary thumbnail"
               itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
-              data-orig="{{ image.url }}">
-        <a href="{{ image.url }}" itemprop="contentUrl" data-size="{{image.width}}x{{image.height}}">
+              data-orig="{{ version_hash(image.url) }}">
+        <a href="{{ version_hash(image.url) }}" itemprop="contentUrl" data-size="{{image.width}}x{{image.height}}">
           <img src="{{ template_url }}/echo/blank.gif"
-                data-echo="{{ image.thumbnail }}"
+                data-echo="{{ version_hash(image.thumbnail) }}"
                 alt="{{ image.url }}" itemprop="thumbnail" title="{{ image.meta['title'] }}" />
         </a>
         <div class="lightbox_caption" itemprop="caption description">{{ image.meta['title'] }}{% if image.meta['summary'] %}<br>{{ image.meta['summary'] }}{% end %}<br>{{ image.meta['description'] }}</div>
@@ -59,13 +59,13 @@
       <figure id="{{ video.name }}" class="gallery__img--secondary thumbnail video"
               itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject"
               data-orig="{{ video.url }}">
-        <a href="{{ video.url }}" itemprop="contentUrl" data-type="video"
-            data-video='<div class="video"><div class="video__container"><video controls><source src="{{ video.url }}" type="{{ video.mime }}" /></video></div></div>'>
+        <a href="{{ version_hash(video.url) }}" itemprop="contentUrl" data-type="video"
+            data-video='<div class="video"><div class="video__container"><video controls><source src="{{ version_hash(video.url) }}" type="{{ video.mime }}" /></video></div></div>'>
         <div class="video-overlay">
           <span class="material-icons">play_circle_outline</span>
         </div>
         <img src="{{ template_url }}/echo/blank.gif"
-              data-echo="{{ video.thumbnail }}"
+              data-echo="{{ version_hash(video.thumbnail) }}"
               alt="{{ video.thumbnail }}" itemprop="thumbnail" title="" />
         </a>
         <div class="lightbox_caption" itemprop="caption description">{{ video.meta['title'] }}<br>{{ video.meta['description'] }}</div>
@@ -82,7 +82,7 @@
       <figure id="{{ file.name }}" class="gallery__img--secondary thumbnail file">
         <a href="{{ file.url }}" target="_blank">
         <img src="{{ template_url }}/echo/blank.gif"
-              data-echo="{{ file.thumbnail }}"
+              data-echo="{{ version_hash(file.thumbnail) }}"
               alt="{{ file.thumbnail }}" itemprop="thumbnail" title="" />
         </a>
         <div class="lightbox_caption" itemprop="caption description">{{ file.meta['title'] }}<br>{{ file.meta['description'] }}</div>
