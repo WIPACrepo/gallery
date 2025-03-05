@@ -81,7 +81,7 @@
         {% if media.thumbnail %}
         <div class="thumbnail">
           <p>Existing thumbnail:</p>
-          <img src="{{ media.thumbnail }}" />
+          <img src="{{ version_hash(media.thumbnail) }}" />
         </div>
         {% end %}
       </div>
@@ -111,14 +111,14 @@
     <h2>Original</h2>
     {% if media.type == 'image' %}
     <div class="media full">
-      <a href="{{ media.src }}" target="_blank">
-        <img src="{{ media.src }}"
+      <a href="{{ version_hash(media.src) }}" target="_blank">
+        <img src="{{ version_hash(media.src) }}"
            alt="{{ media.meta['title'] }}" />
       </a>
     </div>
     {% else %}
     <div class="media link">
-      <a href="{{ media.src }}" target="_blank">link<span class="marker ui-icon ui-icon-extlink"></span></a>
+      <a href="{{ version_hash(media.src) }}" target="_blank">link<span class="marker ui-icon ui-icon-extlink"></span></a>
     </div>
     {% end %}
   </form>
