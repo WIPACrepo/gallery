@@ -2,6 +2,13 @@
 
 
 
+## v0.1.2 (2025-03-05)
+
+###  
+
+* clear the parent page cache for an album thumbnail update (#20) ([`c47a70b`](https://github.com/WIPACrepo/gallery/commit/c47a70bfaec7a42778877a96790f791314ddd8eb))
+
+
 ## v0.1.1 (2025-02-26)
 
 ###  
