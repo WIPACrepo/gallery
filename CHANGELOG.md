@@ -2,6 +2,13 @@
 
 
 
+## v0.1.4 (2025-03-05)
+
+###  
+
+* also hash edit page media, just in case (#22) ([`c4118d9`](https://github.com/WIPACrepo/gallery/commit/c4118d9b163bfcd9be68641de03a661bcedf7906))
+
+
 ## v0.1.3 (2025-03-05)
 
 ###  
