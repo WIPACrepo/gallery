@@ -28,6 +28,9 @@ class EnvConfig:
     CI_TEST: bool = False
     LOG_LEVEL: str = 'INFO'
 
+    VERSION_HASH_DIGEST_SIZE: int = 20
+    VERSION_HASH_PERSON: bytes = b'GalleryVersion'
+
     def __post_init__(self) -> None:
         object.__setattr__(self, 'LOG_LEVEL', self.LOG_LEVEL.upper())  # b/c frozen
 

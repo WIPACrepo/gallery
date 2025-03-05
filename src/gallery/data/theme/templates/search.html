@@ -28,8 +28,8 @@
     {% for ret in results %}
     <div class="search-result">
       <div class="thumbnail">
-        <a href="{{ ret.url }}">
-          <img src="{{ ret.thumbnail }}" />
+        <a href="{{ version_hash(ret.url) }}">
+          <img src="{{ version_hash(ret.thumbnail) }}" />
         </a>
       </div>
       <div class="details">
@@ -47,7 +47,7 @@
         {% if ret.type == "album" %}
         <div><span class="label">Url: </span><a href="{{ ret.url }}"><span class="orig">{{ ret.url }}</span></a></div>
         {% else %}
-        <div><span class="label">File: </span><a href="{{ ret.src }}"><span class="orig">{{ ret.src }}</span></a></div>
+        <div><span class="label">File: </span><a href="{{ version_hash(ret.src) }}"><span class="orig">{{ ret.src }}</span></a></div>
         <div><span class="label">Album: </span><a href="{{ ret.album_url }}"><span class="orig">{{ ret.album_url }}</span></a></div>
         {% end %}
       </div>
