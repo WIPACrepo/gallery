@@ -175,7 +175,7 @@
         {% if album.thumbnail %}
         <div class="thumbnail">
           <p>Existing thumbnail:</p>
-          <img src="{{ album.thumbnail }}" />
+          <img src="{{ version_hash(album.thumbnail) }}" />
         </div>
         {% end %}
       </div>
