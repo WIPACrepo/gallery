@@ -2,6 +2,15 @@
 
 
 
+## v0.1.3 (2025-03-05)
+
+###  
+
+* add version string to all _src media to fix browser caching (#21)
+
+add version string to all _src media, to fix browser caching when updating ([`0099bd5`](https://github.com/WIPACrepo/gallery/commit/0099bd543a3bd23333e18610a65bfcd463f7359d))
+
+
 ## v0.1.2 (2025-03-05)
 
 ###  
