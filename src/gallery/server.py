@@ -275,6 +275,9 @@ class EditHandler(BaseHandler):
         path = str(album_path.relative_to(ENV.SOURCE)).strip('/')
         try:
             await self.page_cache.delete(path)
+            if path != '':
+                parent_path = str(album_path.parent.relative_to(ENV.SOURCE)).strip('/')
+                await self.page_cache.delete(parent_path)
         except Exception as e:
             logging.info('error removng %s from cache: %r', path, e)
 
