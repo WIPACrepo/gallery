@@ -244,6 +244,9 @@ strong {
   font-size: 50px;
   vertical-align: middle;
 }
+.pswp__container img.pswp__img {
+  background: #eee;
+}
 
 .gallery__title {
   line-height: 14px;
