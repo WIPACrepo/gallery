@@ -2,6 +2,13 @@
 
 
 
+## v0.1.5 (2025-03-06)
+
+###  
+
+* set transparent background color for full screen images (#23) ([`cf49488`](https://github.com/WIPACrepo/gallery/commit/cf49488f6aa756e952ffba08981f4250d3f0a8e4))
+
+
 ## v0.1.4 (2025-03-05)
 
 ###  
