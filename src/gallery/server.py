@@ -20,7 +20,7 @@ from .albums import Album, AlbumItem, Media
 from .config import ENV
 from .index import Indexer
 from .caching import RedisInstance
-from .util import read_metadata, write_metadata
+from .util import read_metadata, write_metadata, get_type
 
 
 logger = logging.getLogger('server')
@@ -167,16 +167,21 @@ class BaseHandler(KeycloakUsernameMixin, RequestHandler):
                 for src_path in path.iterdir():
                     if src_path.name == 'thumbnails' or src_path.name.endswith('.meta.json'):
                         continue
-                    if src_path.is_file() and src_path.suffix in ENV.IMG_EXTENSIONS:
+                    if src_path.is_file() and get_type(src_path) == 'image':
                         break
                 else:
                     return None
             else:
                 logging.info("auto thumbnail for media")
-                src_path = path
+                if get_type(path) == 'image':
+                    src_path = path
+                else:
+                    return None
             try:
                 subprocess.check_call(['convert', str(src_path), '-resize', '150x150', '-auto-orient', str(thumb_path)])
             except Exception:
+                if thumb_path.exists():
+                    thumb_path.unlink()
                 return None
 
         if prev_thumb:
@@ -436,63 +441,66 @@ class UploadHandler(BaseHandler):
         album_path = basedir / web_path.relative_to('/edit')
         logging.info('album_path: %s', album_path)
 
-        if newdir := self.get_argument('newdir', None):
-            logging.info("New Subalbum!")
-            logging.info("name: %s", newdir)
-            thumbnail = None
-            for _, items in self.request.files.items():
-                for item in items:
-                    thumbnail = item
+        try:
+            if newdir := self.get_argument('newdir', None):
+                logging.info("New Subalbum!")
+                logging.info("name: %s", newdir)
+                thumbnail = None
+                for _, items in self.request.files.items():
+                    for item in items:
+                        thumbnail = item
 
-            new_album_path = album_path / sanitize_name(newdir)
-            if not new_album_path.exists():
-                new_album_path.mkdir()
-                meta = read_metadata(new_album_path)
-                meta['title'] = newdir
-                if self.current_user:
-                    meta['user'] = self.current_user
-                meta['createdate'] = time.time()
-                thumbnail = self._handle_thumbnail(new_album_path, upload_thumb=thumbnail)
-                if thumbnail:
-                    logging.info("set thumbnail: %s", thumbnail)
-                    meta['thumbnail'] = thumbnail
-                write_metadata(new_album_path, meta)
-            await self._add_to_es(new_album_path, meta=meta)
-        else:
-            logging.info("Upload!")
-            logging.info("Args: %r", self.request.body_arguments)
-            files = []
-            for _, items in self.request.files.items():
-                for item in items:
-                    name = sanitize_name(item['filename'])
-                    media_path = album_path / name
-                    with open(media_path, 'wb') as f:
-                        f.write(item['body'])
-                    try:
-                        subprocess.check_call(['convert', str(media_path), '-auto-orient', str(media_path)])
-                    except Exception:
-                        return None
-
-                    meta = read_metadata(media_path)
-                    meta['title'] = item['filename']
+                new_album_path = album_path / sanitize_name(newdir)
+                if not new_album_path.exists():
+                    new_album_path.mkdir()
+                    meta = read_metadata(new_album_path)
+                    meta['title'] = newdir
                     if self.current_user:
                         meta['user'] = self.current_user
                     meta['createdate'] = time.time()
-                    thumbnail = self._handle_thumbnail(media_path)
+                    thumbnail = self._handle_thumbnail(new_album_path, upload_thumb=thumbnail)
                     if thumbnail:
                         logging.info("set thumbnail: %s", thumbnail)
                         meta['thumbnail'] = thumbnail
-                    write_metadata(media_path, meta)
-                    await self._add_to_es(media_path, meta=meta)
+                    write_metadata(new_album_path, meta)
+                await self._add_to_es(new_album_path, meta=meta)
+            else:
+                logging.info("Upload!")
+                logging.info("Args: %r", self.request.body_arguments)
+                files = []
+                for _, items in self.request.files.items():
+                    for item in items:
+                        name = sanitize_name(item['filename'])
+                        media_path = album_path / name
+                        with open(media_path, 'wb') as f:
+                            f.write(item['body'])
+                        if get_type(media_path) == 'image':
+                            try:
+                                subprocess.check_call(['convert', str(media_path), '-auto-orient', str(media_path)])
+                            except Exception as e:
+                                raise HTTPError(500, f'convert failed for {name}: {e}')
 
-                    files.append(item['filename'])
-            logging.info("Files: %d %r", len(files), files)
+                        meta = read_metadata(media_path)
+                        meta['title'] = item['filename']
+                        if self.current_user:
+                            meta['user'] = self.current_user
+                        meta['createdate'] = time.time()
+                        thumbnail = self._handle_thumbnail(media_path)
+                        if thumbnail:
+                            logging.info("set thumbnail: %s", thumbnail)
+                            meta['thumbnail'] = thumbnail
+                        write_metadata(media_path, meta)
+                        await self._add_to_es(media_path, meta=meta)
 
-        path = str(album_path.relative_to(ENV.SOURCE)).strip('/')
-        try:
-            await self.page_cache.delete(path)
-        except Exception as e:
-            logging.info('error removing %s from cache: %r', path, e)
+                        files.append(item['filename'])
+                logging.info("Files: %d %r", len(files), files)
+        finally:
+            # clear page cache even on error, because something may have changed
+            path = str(album_path.relative_to(ENV.SOURCE)).strip('/')
+            try:
+                await self.page_cache.delete(path)
+            except Exception as e:
+                logging.info('error removing %s from cache: %r', path, e)
 
         self.redirect(str(web_redirect))
 
