@@ -2,6 +2,15 @@
 
 
 
+## v0.1.6 (2025-09-25)
+
+###  
+
+* do not call convert on non-image files (#25)
+
+Fixes svg issue (they are not images we can handle) ([`ad406b4`](https://github.com/WIPACrepo/gallery/commit/ad406b4b9fd33d382502413e4f093b94301be224))
+
+
 ## v0.1.5 (2025-03-06)
 
 ###  
